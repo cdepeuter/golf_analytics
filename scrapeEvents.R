@@ -74,5 +74,5 @@ events <- cbind(events, events.addressInfo)
 events <- events[, !(colnames(events) %in% c("document.id", "array.index"))]
 
 #write to file
-write.table(events, paste0("./data/events_", season, ".csv"))
+write.table(events, paste0("./data/events_", season, ".csv"), sep=",")
 
