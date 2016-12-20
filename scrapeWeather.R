@@ -26,7 +26,7 @@ getWeatherResponseForAddrDate <- function(addr, dateStr){
   }else if(!is.null(addr$city) && !is.null(addr$state)){
     #take spaces out of city
     city <- addr$city
-    city <= sub(" ", "_", city)
+    city <- gsub(" ", "_", city)
     wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/",  addr$state, "/", city, ".json", sep = "")
   }else{
     return("Not enough info to fetch weather")

@@ -1,6 +1,7 @@
 #first grabbing all tournaments for given season
 tourUrl <- "http://site.api.espn.com/apis/site/v2/sports/golf/pga/tourschedule?season="
 season <- "2016"
+googleKey <- 'AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg'
 
 #get all season data, turn that into json
 seasonReq <- GET(paste(tourUrl, season, sep=""))
@@ -55,8 +56,12 @@ getEventAddress <- function(id){
     addrInfo[["country"]] <- NA
   }
   
+  #add course name for places api search
+  addrInfo[["courseName"]] <- eventJSON.obj$events$courses[[1]]$name
+  
   #add id for remapping
   addrInfo[["id"]] <- id
+  
   
   return(data.frame(addrInfo))
 }
@@ -71,8 +76,83 @@ events.addressInfo <- events.addressInfo[!duplicated(events.addressInfo$id),]
 events <- cbind(events, events.addressInfo)
 
 #drop bad cols
-events <- events[, !(colnames(events) %in% c("document.id", "array.index"))]
+events <- events[, !(colnames(events) %in% c("document.id", "array.index", "id.1"))]
 
-#write to file
-write.table(events, paste0("./data/events_", season, ".csv"), sep=",")
+#get US events, only grabbing coordinates for those, remove bad events
+events.us <- events[events$country == "United States",]
+events.usKeep <- !apply(events.us, 1, function(x) all(is.na(x)))
+events.us <- events.us[events.usKeep, ]
+
+
+#get coordinates for each course
+getLatLongByPlaceName <- function(course){
+  #get coordinates for googles first guess of the place
+  #https://maps.googleapis.com/maps/api/place/autocomplete/json?input=TPC+Sawgrass&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg
+  #print(course)
+  place <- course[["courseName"]]
+  
+  
+  place <-  gsub(" ", "+", place)
+
+  #use autocomplete API to guess course based on name
+  
+  print(paste("getting place id for", place))
+  place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", place, "&key=", googleKey) 
+  
+  place.json  <- place.url %>%
+    GET() %>%
+    content(as="text") %>%
+    fromJSON()
+  
+  if(length(place.json$predictions) == 0){
+    #remove ( ) from string, add town + state, retry req
+    
+    #if city + state available, add them
+    if(!is.null(course[["city"]]) && !is.null(course[["state"]])){
+      place <- paste(place, course[["city"]], course[["state"]], sep="+")
+    }
+    
+    place <-  gsub(" ", "+", place)
+    
+    place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", place, "&key=", googleKey) 
+    place.url <- gsub("\\(.*\\)", "", place.url)
+    
+    place.json  <- place.url %>%
+      GET() %>%
+      content(as="text") %>%
+      fromJSON()
+  }
+  
+  #get placeID of top result
+  
+  place.placeId <- place.json$predictions$place_id[1]
+  print(paste("PLACE ID FOUND:", place.placeId))
+  #https://maps.googleapis.com/maps/api/place/details/json?placeid=ChIJe8Or01Y25IgRee9NrjQN220&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg
+  
+  #use details api to get lat/log
+  print(paste("getting place details for ", place))
+  place.detailsJSON <- paste0("https://maps.googleapis.com/maps/api/place/details/json?placeid=",place.placeId,"&key=", googleKey) %>% 
+    GET() %>%
+    content(as="text") %>%
+    fromJSON()
+  
+  #return lat & long
+  place.latLong <- unlist(place.detailsJSON$result$geometry$location)
+
+  #fill NA
+  if(is.null(place.latLong)){
+    place.latLong <- c()
+    place.latLong[["lat"]] <- NA
+    place.latLong[["lng"]] <- NA
+  }
+
+  return(place.latLong)
+}
+
+events.uslatlong <- apply(events.us, 1, getLatLongByPlaceName)
+events.us <- cbind(events.us, t(events.uslatlong))
+
+#write data to file
+write.table(events, paste0("./data/events_", season, ".csv"), sep=",",eol = ";", row.names = FALSE)
+write.table(events.us, paste0("./data/events_US_latlong-", season, ".csv"), sep=",",eol = ";", row.names = FALSE)
 

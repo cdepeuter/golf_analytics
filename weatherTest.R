@@ -34,3 +34,5 @@ write(players.resp, paste("./json/", players.info$id, "_", players.info$start, "
 #response
 # mean Wind      rain  min temp  max temp 
 # "4"    "0.00"      "64"      "87" 
+
+
