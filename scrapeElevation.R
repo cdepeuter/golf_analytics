@@ -27,9 +27,29 @@ getElevationAtPoint <- function(lat, long){
     content(as="text") %>%
     fromJSON()
   
-  #grab elevation from response json
+  #grab elevation from response json, convert to feet
   elevation <- elevation.json$results$elevation
-  return(elevation)
+  return(elevation * 3.28084)
+}
+
+getElevationAtPoints <- function(pointString){
+  # given string of points, give elevation at those points
+  # input: string of lat,long separated by |
+  # output: elevation list in meters
+  
+  elevation.url <- paste0("https://maps.googleapis.com/maps/api/elevation/json?locations=", pointString, "&key=", googleKey)
+  
+  #sometimes a space in elevations, remove from url
+  elevation.url <- gsub(" ", "", elevation.url)
+  
+  elevation.json <- elevation.url %>%
+    GET() %>%
+    content(as="text") %>%
+    fromJSON()
+  
+  #grab elevation from response json, convert to feet
+  elevation <- elevation.json$results$elevation
+  return(elevation * 3.28084)
 }
 
 getElevationForCourse <- function(course){
@@ -39,6 +59,28 @@ getElevationForCourse <- function(course){
     return(getElevationAtPoint(course[["lat"]], course[["lng"]]))
   }
   return(NA)
+}
+
+gridElevationAroundPoint <- function(lat, long){
+  # given a point, grab a grid of elevations around that point
+  # input: lat/log of center point
+  # output: matrix of elevation values around point
+  
+  range <- .030
+  steps <- 10
+  scalee <- seq(from=range/-2, to=range/2, length.out = steps)
+
+  latitudes <- lat + scalee
+  longitudes <- long + scalee
+  
+  #get array in matrix
+  pointArray <- matrix(unlist(lapply(latitudes, paste, longitudes, sep=",")), nrow=steps, ncol=steps)
+  pointStr <- paste(pointArray,  collapse="|")
+  
+  elevations <- getElevationAtPoints(pointStr)
+  
+  #convert to feet
+  return(matrix(elevations, nrow=steps, ncol=steps)*3.28084)
 }
 
 elevations <- unlist(apply(events.us, 1,getElevationForCourse ))
