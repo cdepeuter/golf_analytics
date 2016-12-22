@@ -61,13 +61,11 @@ getElevationForCourse <- function(course){
   return(NA)
 }
 
-gridElevationAroundPoint <- function(lat, long){
+gridElevationAroundPoint <- function(lat, long, range = .030, steps = 10){
   # given a point, grab a grid of elevations around that point
   # input: lat/log of center point
   # output: matrix of elevation values around point
   
-  range <- .030
-  steps <- 10
   scalee <- seq(from=range/-2, to=range/2, length.out = steps)
 
   latitudes <- lat + scalee
@@ -76,12 +74,9 @@ gridElevationAroundPoint <- function(lat, long){
   #get array in matrix
   pointArray <- matrix(unlist(lapply(latitudes, paste, longitudes, sep=",")), nrow=steps, ncol=steps)
   pointStr <- paste(pointArray,  collapse="|")
-  
+  #print(pointArray)
+  #print(pointStr)
   elevations <- getElevationAtPoints(pointStr)
   
-  #convert to feet
-  return(matrix(elevations, nrow=steps, ncol=steps)*3.28084)
+  return(matrix(elevations, nrow=steps, ncol=steps))
 }
-
-elevations <- unlist(apply(events.us, 1,getElevationForCourse ))
-events.us$elevations <- elevations
