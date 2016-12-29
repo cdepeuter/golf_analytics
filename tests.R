@@ -48,3 +48,6 @@ test_that("Barclays Elevation", expect_equal(getElevationForCourse(barclays), ba
 
 
 
+#weather
+
+

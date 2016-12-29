@@ -3,13 +3,20 @@ wugKey <-"8569324e20ad844f"
 
 
 getWugDateFormat <- function(dateStr){
-  #put file in YYYYMMDD format
-  
-  date <- as.Date(dateStr)
-  return(as.character(date, format = "%Y%m%d"))
+    #put file in YYYYMMDD format
+    
+    #shotlink format "%m/%d/%Y"
+    # TODO make this more thorogugh
+    if(nchar(dateStr) == 10){
+        date <- as.Date(dateStr, format="%m/%d/%Y")
+    } else{
+        date <- as.Date(dateStr)
+    }
+    
+    return(as.character(date, format = "%Y%m%d"))
 }
 
-getWeatherResponseForCourseDate <- function(course, dateStr){
+getWeatherObservationsForCourseDate <- function(course, dateStr){
     # get weather info json response for event at given address on date
     # input: course info with city, state, zip(maybe)
     # output json response from weather underground api
@@ -46,8 +53,38 @@ getWeatherResponseForCourseDate <- function(course, dateStr){
         debug.print(paste("saving weather to file", filename))
         write_file(weatherContent, filename)
     }
-      
-  return(weatherContent) 
+    
+    
+    weatherJSON <- fromJSON(weatherContent)
+    observations <- weatherJSON$history$observations
+    
+    # TODO CHECK TIMEZONE DATA
+    # maybe use UTC if this is an issue
+    if(observations$date$tzname[1] !="America/New_York"){
+        print("TIMEZONE NOT STANDARD");
+    }
+    
+    
+    #remove nested dataframe and add info in separate columns
+    dateData <- observations$date
+    hr <- observations$date$hour
+    min  <- observations$date$min
+    time <- as.integer(paste(hr, min, sep=""))
+    
+    
+    year <- observations$date$year
+    month <- observations$date$mon
+    day <- observations$date$mday
+    
+    date <- paste(year, month, day, sep="")
+    
+    observations$date <- date
+    observations$time <- time
+    
+    #drop utc nested dataframe, other column which is probably meter name, 
+    observations <- observations[, !(colnames(observations) %in% c("utcdate", "metar" ))]
+    
+    return(observations)
 }
 
 
@@ -111,13 +148,59 @@ getObservationsFromWeather <- function(weatherContent){
     return(observations)
 }
 
-getWeatherForShot <- function(shot, observations){
+getAllWeatherForShots <- function(shots, course){
+    # for each date in the shotlink data, get the weather observations for the course and store those
+    # in memory so when running get weather for shot no API call need to be made
+    dates <- unique(shots$Date)
+    
+    weathers <- list()
+    
+    for(i in 1:length(dates)){
+        weathers[[i]] <- getWeatherObservationsForCourseDate(course, dates[i])
+    }
+    
+    names(weathers) <- dates
+    
+    return(weathers)
+}
+
+getWeatherForShot <- function(shot, weather){
     # for a given shot, find the weather observation with the closest time
     # assuming the observations are at the right zip code and date
     # input: shot in shotlink format, observations in weatherUnderground format
     # output: rain, wind data
     
+    
+    observations <- weather[shot$Date]
     closestObservation <- observations[which.min(abs(observations$time - shot$Time)),] 
+    
+    dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
+    return(closestObservation[,dataWeWant])
+}
+
+
+getWeatherObsForShot <- function(shot, observations){
+    # for a given shot, find the weather observation with the closest time
+    # assuming the observations are at the right zip code and date
+    # input: shot in shotlink format, observations in weatherUnderground format
+    # output: rain, wind data
+    
+
+    closestObservation <- observations[which.min(abs(observations$time - shot$Time)),] 
+    
+    dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
+    return(closestObservation[,dataWeWant])
+}
+
+getWeatherForShot <- function(shot, weather){
+    # for a given shot, find the weather observation with the closest time
+    # assuming the observations are at the right zip code and date
+    # input: shot in shotlink format, observations in weatherUnderground format
+    # output: rain, wind data
+    
+    
+    observations <- weather[shot[["Date"]]][[1]]
+    closestObservation <- observations[which.min(abs(observations$time - as.integer(shot[["Time"]]))),] 
     
     dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
     return(closestObservation[,dataWeWant])
