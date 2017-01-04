@@ -30,6 +30,10 @@ getWeatherObservationsForCourseDate <- function(course, dateStr){
     #take spaces out of city
     if(!is.null(course$zipCode)){
         addr <- course$zipCode
+        if(nchar(as.character(addr)) == 4){
+            #if leading 0 is removed we want to add one
+            addr <- paste0("0", as.character(addr))
+        }
     }else if(!is.null(course$city) && !is.null(course$state)){
         city <- course$city
         city <- gsub(" ", "_", city)

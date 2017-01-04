@@ -51,6 +51,9 @@ getEventAddress <- function(id){
   #fill NAs
   if(is.null(addrInfo$zipCode)){
     addrInfo[["zipCode"]] <- NA
+  } else if(nchar(as.character(addrInfo$zipCode)) == 4){
+      #if leading 0 is removed we want to add one
+      addrInfo$zipCode <- paste0("0", addrInfo$zipCode)
   }
   
   if(is.null(addrInfo$state)){
