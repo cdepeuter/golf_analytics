@@ -31,7 +31,12 @@ if(file.exists(filename)){
     events.us <- events.us[events.usKeep, ]
     
     
+    #coerce zip into string so it keeps 5 chars
+    events.us$zipCode <- as.character(events.us$zipCode)
     
+    #fill missing zip codes
+    zips <- apply(events.us, 1, fillMissingZips)
+    events.us$zipCode <- zips
     
     #get all lat/long, add to dataframe
     events.uslatlong <- apply(events.us, 1, getLatLongByPlaceName)
@@ -45,8 +50,6 @@ if(file.exists(filename)){
     elevation <- unlist(apply(events.us, 1,getElevationForCourse ))
     events.us$elevation <- elevation
     
-    #coerce zip into string so it keeps 5 chars
-    events.us$zipCode <- as.character(events.us$zipCode)
     
     #write data to file
     write.table(events, paste0("./data/events_", season, ".csv"), sep=",",eol = ";", row.names = FALSE)

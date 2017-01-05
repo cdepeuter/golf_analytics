@@ -208,6 +208,6 @@ getWeatherForShot <- function(shot, weather){
     
     dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
     dat <- closestObservation[,dataWeWant]
-    colnames(dat) <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "weatherTime")
+    colnames(dat) <- c("tempF", "humidity", "wDirDeg","wDir", "windGust","precip","rain", "conds", "weatherTime")
     return(dat)
 }
