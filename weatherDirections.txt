@@ -1,0 +1,7 @@
+To run shotlink weather scraping:
+
+- confirm the root of this repo is the working R directory 
+    - getwd() to check, can be set using the "More" menu in the bottom right pane
+- place  shotlink data file(s) in the ./data/shotlink directory
+- source ./shotlinkToWeather.R
+- processed files should be in the ./data/shotlink/processed/
