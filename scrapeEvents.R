@@ -77,71 +77,101 @@ getEventAddress <- function(id){
 
 #get coordinates for each course
 getLatLongByPlaceName <- function(course){
-  # get coordinates for googles first guess of the course
-  # input: course row with courseName, maybe state & city
-  # output: latitude & longitude of given course
+    # get coordinates for googles first guess of the course
+    # input: course row with courseName, maybe state & city
+    # output: latitude & longitude of given course
   
-  place <- course[["courseName"]]
-  
-  place <- gsub("GC", "Golf Club", place)
-  place <- gsub(" ", "+", place)
-  
-
-  #use autocomplete API to guess course based on name
-  debug.print(paste("getting place id for", place))
-  place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", place, "&key=", googleKey) 
-  debug.print(place.url)
-  
-  place.json  <- place.url %>%
-    GET() %>%
-    content(as="text") %>%
-    fromJSON()
-  
-  if(length(place.json$predictions) == 0){
-    #remove ( ) from string, add town + state, retry req
-    debug.print(paste("no results, add city and state", course[["city"]], course[["state"]]))
+    place <- course[["courseName"]]
+    
+    place <- gsub("GC", "Golf Club", place)
+    place <- gsub("CC", "Country Club", place)
+    
+    
     #if city + state available, add them
     if(!is.null(course[["city"]]) && !is.null(course[["state"]])){
-    
-      place <- paste(place, course[["city"]], course[["state"]], sep="+")
+        place <- paste(place, course[["city"]], course[["state"]], sep="+")
     }
     
     place <-  gsub(" ", "+", place)
     
     place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", place, "&key=", googleKey) 
     place.url <- gsub("\\(.*\\)", "", place.url)
+    debug.print(paste("getting place id, first try", place.url))
     
     place.json  <- place.url %>%
-      GET() %>%
-      content(as="text") %>%
-      fromJSON()
-  }
+        GET() %>%
+        content(as="text") %>%
+        fromJSON()
   
-  #get placeID of top result
-  
-  place.placeId <- place.json$predictions$place_id[1]
-  print(paste("PLACE ID FOUND:", place.placeId))
-
-  #use details api to get lat/log
-  
-  place.detailsUrl <- paste0("https://maps.googleapis.com/maps/api/place/details/json?placeid=",place.placeId,"&key=", googleKey)
-  print(paste("getting place details for ", place, place.detailsUrl))
-  place.detailsJSON <- place.detailsUrl %>% 
-    GET() %>%
-    content(as="text") %>%
-    fromJSON()
-  
-  #return lat & long
-  place.latLong <- unlist(place.detailsJSON$result$geometry$location)
-
-  #fill NA
-  if(is.null(place.latLong)){
-    place.latLong <- c()
-    place.latLong[["lat"]] <- NA
-    place.latLong[["lng"]] <- NA
-  }
-
-  return(place.latLong)
+    if(length(place.json$predictions) == 0){
+        #remove ( ) from string, add town + state, retry req
+        
+        #have manual substitutions for the courses that just dont work
+        
+        
+        place <- course[["courseName"]]
+        
+        place <- gsub("GC", "Golf Club", place)
+        place <- gsub("CC", "Country Club", place)
+        
+        
+        if(course[["courseName"]] == "Plantation Course at Kapalua"){
+            place <- "Kapalua%20Golf%20-%20The%20Plantation%20Course"
+        } else if(course[["courseName"]] == "RTJ Trail (Grand National)"){
+            place <- "Grand National Golf"
+        }
+        #tpc four seasons just need to remove resort
+        #tpc san antonio remove at&t oaks
+        
+        place <- gsub(" ", "+", place)
+        
+        
+        debug.print(paste("no results, try without city and state", place.url))
+        
+        #use autocomplete API to guess course based on name
+        debug.print(paste("getting place id for", place))
+        place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", place, "&key=", googleKey) 
+        place.url <- gsub("\\(.*\\)", "", place.url)
+        debug.print(place.url)
+        
+        place.json  <- place.url %>%
+          GET() %>%
+          content(as="text") %>%
+          fromJSON()
+      
+    }
+    
+    #get placeID of top result
+    
+    place.placeId <- place.json$predictions$place_id[1]
+    
+    if(is.null(place.placeId)){
+        debug.print("place id not found")
+    }else{
+       debug.print(paste("PLACE ID FOUND:", place.placeId))
+    }
+    
+    
+    #use details api to get lat/log
+    
+    place.detailsUrl <- paste0("https://maps.googleapis.com/maps/api/place/details/json?placeid=",place.placeId,"&key=", googleKey)
+    debug.print(paste("getting place details for ", place, place.detailsUrl))
+    place.detailsJSON <- place.detailsUrl %>% 
+                            GET() %>%
+                            content(as="text") %>%
+                            fromJSON()
+    
+    #return lat & long
+    place.latLong <- unlist(place.detailsJSON$result$geometry$location)
+    
+    #fill NA
+    if(is.null(place.latLong)){
+        place.latLong <- c()
+        place.latLong[["lat"]] <- NA
+        place.latLong[["lng"]] <- NA
+    }
+    
+    return(place.latLong)
 }
 
 fillMissingZips <- function(course){
