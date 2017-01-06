@@ -28,7 +28,9 @@ getWeatherObservationsForCourseDate <- function(course, dateStr){
     wugDateStr <- getWugDateFormat(dateStr)
     
     #take spaces out of city
-    if(!is.null(course$zipCode)){
+    if(!is.null(course$lat) && !is.null(course$lng)){
+       addr <- paste(course$lat, course$lng, sep=",") 
+    } else if(!is.null(course$zipCode)){
         addr <- course$zipCode
         if(nchar(as.character(addr)) == 4){
             #if leading 0 is removed we want to add one
