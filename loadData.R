@@ -1,7 +1,7 @@
 debug.debug=TRUE
 debug.print <- function(x){if(debug.debug){print(x)}}
 
-season <- "2016"
+season <- "2015"
 filename <- paste0("./data/events_US_latlong_", season, ".csv")
 
 if(file.exists(filename)){

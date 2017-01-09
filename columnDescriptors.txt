@@ -10,3 +10,9 @@ windGust - wind gust in mph
 precip - precipitation in inches
 conds - description of conditions
 weatherTime - time of weather observation
+
+
+meta weather columns:
+dayX_obs - number of weather observations we have for day X of the tournament
+airport_code - airport code for the weather station
+air_course_dist - distance between lat/long for course and airport

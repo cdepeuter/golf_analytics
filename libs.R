@@ -8,5 +8,8 @@ library(tidyverse)
 #for string similarity
 library(RecordLinkage)
 
+#point distance
+library(geosphere)
+
 #for testing
 library(testthat)

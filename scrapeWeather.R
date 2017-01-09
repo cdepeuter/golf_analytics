@@ -9,11 +9,83 @@ getWugDateFormat <- function(dateStr){
     # TODO make this more thorogugh
     if(nchar(dateStr) == 10){
         date <- as.Date(dateStr, format="%m/%d/%Y")
+        if(is.na(date)){
+            date <- as.Date(dateStr)   
+        }
     } else{
         date <- as.Date(dateStr)
     }
     
     return(as.character(date, format = "%Y%m%d"))
+}
+
+getWeatherForTournament <- function(course){
+    #get all dates for tourney
+    debug.print(paste("weather for tourney", course[["label"]]))
+    dates <- seq.Date(as.Date(course[["start"]]), as.Date(course[["end"]]), by="day")
+    
+    ret <- list()
+    ret[1] <- course[["courseName"]]
+    ret[2] <- course[["label"]]
+    
+    #getWeatherObservationsForCourseDate
+    nDates <- length(dates)
+    
+    #hope 6 is the max number of days in tourney
+    for(i in 1:6){
+        if(i <= length(dates)){
+            date <- dates[i]
+            
+            
+            #file should save, thats what we really want
+            #but from this response check out airport code
+            wObs <- getWeatherObservationsForCourseDate(course, date)
+            nObs <- dim(wObs)[1]
+            
+            ret[i+2] <- nObs
+            
+            #TODO 5 days uh oh
+        }else{
+            ret[i+2] <- NA
+        }
+    }
+    
+    #keep track of metar/airport code
+    air <- substring(strsplit(wObs$metar[1], split = " ")[[1]][[2]], 2)
+    debug.print(paste("airport code", air)) 
+    
+    ret[9] <- air
+    
+    #getAirport location
+    airLoc <- getAirportLocation(air)
+    
+    #swap lat/long
+    airLoc <- as.vector(c(airLoc[2], airLoc[1]))
+    courseLoc <- as.vector(as.double(c(course[["lng"]], course[["lat"]])))
+    
+    #get Distance convert to miles
+    debug.print(courseLoc)
+    debug.print(airLoc)
+    if(is.null(courseLoc) | is.null(airLoc)){
+        dist <- NA
+    }else{
+        dist <- distVincentySphere(airLoc, courseLoc) * 0.000621371 
+    }
+    
+    ret[10] <- dist
+    
+    debug.print(paste("Distance between course and measurements", dist))
+    
+    return(ret)
+}
+
+getWeatherForTournaments <- function(courses){
+    #get meta weather info for each course/date
+    
+    infos <- apply(courses, 1, getWeatherForTournament)
+    df <- do.call("rbind", infos)
+    colnames(df) <- c("course", "tournament", "day1_obs", "day2_obs", "day3_obs", "day4_obs", "day5_obs", "day6_obs", "airport_code", "air_course_dist")
+    return(df)
 }
 
 getWeatherObservationsForCourseDate <- function(course, dateStr){
@@ -28,24 +100,26 @@ getWeatherObservationsForCourseDate <- function(course, dateStr){
     wugDateStr <- getWugDateFormat(dateStr)
     
     #take spaces out of city
-    if(!is.null(course$lat) && !is.null(course$lng)){
-       addr <- paste(course$lat, course$lng, sep=",") 
-    } else if(!is.null(course$zipCode)){
-        addr <- course$zipCode
+    if(!is.null(course[["lat"]]) && !is.null(course[["lng"]])){
+       addr <- paste(course[["lat"]], course[["lng"]], sep=",") 
+    } else if(!is.null(course[["zipCode"]])){
+        addr <- course[["zipCode"]]
         if(nchar(as.character(addr)) == 4){
             #if leading 0 is removed we want to add one
             addr <- paste0("0", as.character(addr))
         }
-    }else if(!is.null(course$city) && !is.null(course$state)){
-        city <- course$city
+    }else if(!is.null(course[["city"]]) && !is.null(course[["state"]])){
+        city <- course[["city"]]
         city <- gsub(" ", "_", city)
-        addr <- paste(course$state, "/", city)
+        addr <- paste(course[["state"]], "/", city)
     }else{
         return("Not enough info to fetch weather")
     }
-  
+    
     
     filename <- paste0("./data/weather/",addr, "-", wugDateStr, ".json")
+    filename <- gsub(" ", "", filename)
+
     if(file.exists(filename)){
         debug.print(paste("getting", filename, "locally"))
         weatherContent <- read_file(filename)
@@ -53,6 +127,7 @@ getWeatherObservationsForCourseDate <- function(course, dateStr){
         #no weather locally, grab file and save it
         
         wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/", addr, ".json", sep = "")
+        wugUrl <- gsub(" ", "", wugUrl)
         debug.print(paste("getting weather info ", wugUrl))
         weatherReq <- GET(wugUrl)
         weatherContent <- content(weatherReq, as="text")
@@ -88,7 +163,7 @@ getWeatherObservationsForCourseDate <- function(course, dateStr){
     observations$time <- time
     
     #drop utc nested dataframe, other column which is probably meter name, 
-    observations <- observations[, !(colnames(observations) %in% c("utcdate", "metar" ))]
+    observations <- observations[, !(colnames(observations) %in% c("utcdate" ))]
     
     return(observations)
 }
@@ -170,33 +245,6 @@ getAllWeatherForShots <- function(shots, course){
     return(weathers)
 }
 
-getWeatherForShot <- function(shot, weather){
-    # for a given shot, find the weather observation with the closest time
-    # assuming the observations are at the right zip code and date
-    # input: shot in shotlink format, observations in weatherUnderground format
-    # output: rain, wind data
-    
-    
-    observations <- weather[shot$Date]
-    closestObservation <- observations[which.min(abs(observations$time - shot$Time)),] 
-    
-    dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
-    return(closestObservation[,dataWeWant])
-}
-
-
-getWeatherObsForShot <- function(shot, observations){
-    # for a given shot, find the weather observation with the closest time
-    # assuming the observations are at the right zip code and date
-    # input: shot in shotlink format, observations in weatherUnderground format
-    # output: rain, wind data
-    
-
-    closestObservation <- observations[which.min(abs(observations$time - shot$Time)),] 
-    
-    dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
-    return(closestObservation[,dataWeWant])
-}
 
 getWeatherForShot <- function(shot, weather){
     # for a given shot, find the weather observation with the closest time
@@ -213,3 +261,42 @@ getWeatherForShot <- function(shot, weather){
     colnames(dat) <- c("tempF", "humidity", "wDirDeg","wDir", "windGust","precip","rain", "conds", "weatherTime")
     return(dat)
 }
+
+
+
+getAirportLocation <- function(code){
+    #given an airport code, first find location, then get lat/log
+    place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", paste(code, "Airport", sep="+"), "&key=", googleKey) 
+    debug.print(paste("getting airport id, first try", place.url))
+    
+    place.json  <- place.url %>%
+        GET() %>%
+        content(as="text") %>%
+        fromJSON()
+    
+    place.placeId <- place.json$predictions$place_id[1]
+    
+    if(is.null(place.placeId)){
+        debug.print("place id not found")
+    }else{
+        debug.print(paste("PLACE ID FOUND:", place.placeId))
+    }
+    
+    
+    #use details api to get lat/log
+    
+    place.detailsUrl <- paste0("https://maps.googleapis.com/maps/api/place/details/json?placeid=",place.placeId,"&key=", googleKey)
+    debug.print(paste("getting place details for ", code,place.detailsUrl))
+    place.detailsJSON <- place.detailsUrl %>% 
+        GET() %>%
+        content(as="text") %>%
+        fromJSON()
+    
+    #return lat & long
+    place.latLong <- unlist(place.detailsJSON$result$geometry$location)
+    
+    #if no location do something
+    return(place.latLong)
+}
+
+
