@@ -1,5 +1,4 @@
 #first grabbing all tournaments for given season
-season <- "2016"
 googleKey <- 'AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg'
 
 getEventsForSeason <- function(season){
@@ -40,27 +39,39 @@ getEventAddress <- function(id){
   tail <- "&lang=en&region=us"
   
   #make request, format in json, then dataframe using fromJSON
-  print(paste("making req for tourney", id))
-  eventJSON.req <- GET(paste(baseUrl, id, tail, sep=""))
+  
+  eventJSON.reqUrl <- paste(baseUrl, id, tail, sep="")
+  print(paste("making req for tourney", id, eventJSON.reqUrl))
+  eventJSON.req <- GET(eventJSON.reqUrl)
   eventJSON <- content(eventJSON.req, as="text")
   eventJSON.obj <- fromJSON(eventJSON)
   
   #get address info from nested data frame
   addrInfo <- eventJSON.obj$events$courses[[1]]$address
   print(addrInfo)
-  #fill NAs
-  if(is.null(addrInfo$zipCode)){
-    addrInfo[["zipCode"]] <- NA
-  } else if(nchar(as.character(addrInfo$zipCode)) == 4){
-      #if leading 0 is removed we want to add one
-      addrInfo$zipCode <- paste0("0", addrInfo$zipCode)
+  
+  if(is.null(addrInfo)){
+      print("NULL info")
+      addrInfo <- list()
+      addrInfo[["state"]] <- NA
+      addrInfo[["city"]] <- NA
+      addrInfo[["country"]] <- NA
+      addrInfo[["zipCode"]] <- NA
   }
   
-  if(is.null(addrInfo$state)){
+  #fill NAs
+  if(is.null(addrInfo[["zipCode"]]) || is.na(addrInfo[["zipCode"]]) ){
+    addrInfo[["zipCode"]] <- NA
+  } else if(nchar(as.character(addrInfo[["zipCode"]])) == 4){
+      #if leading 0 is removed we want to add one
+      addrInfo$zipCode <- paste0("0", addrInfo[["zipCode"]])
+  }
+  
+  if(is.null(addrInfo[["state"]])){
     addrInfo[["state"]] <- NA
   }
   
-  if(is.null(addrInfo$country)){
+  if(is.null(addrInfo[["country"]])){
     addrInfo[["country"]] <- NA
   }
   
@@ -82,7 +93,7 @@ getLatLongByPlaceName <- function(course){
     # output: latitude & longitude of given course
   
     place <- course[["courseName"]]
-    
+    place <- gsub("G&CC", "Golf and Country Club", place)
     place <- gsub("GC", "Golf Club", place)
     place <- gsub("CC", "Country Club", place)
     
@@ -119,6 +130,12 @@ getLatLongByPlaceName <- function(course){
             place <- "Kapalua%20Golf%20-%20The%20Plantation%20Course"
         } else if(course[["courseName"]] == "RTJ Trail (Grand National)"){
             place <- "Grand National Golf"
+        } else if(course[["courseName"]] == "TPC San Antonio - AT&T Oaks"){
+            place <- "TPC San Antonio"
+        } else if(course[["courseName"]] == "TPC Four Seasons Resort"){
+            place <- "TPC Four Seasons"
+        } else if(course[["courseName"]] == "Chambers Bay GC"){
+            place <- "Chambers Bay Golf Course"
         }
         #tpc four seasons just need to remove resort
         #tpc san antonio remove at&t oaks
@@ -176,9 +193,9 @@ getLatLongByPlaceName <- function(course){
 
 fillMissingZips <- function(course){
     # search google for the golf course, add zip code
-    if(is.na(course[["zipCode"]])){
+    if(is.na(course[["zipCode"]]) | nchar(course[["zipCode"]]) == 12){
         place <- course[["courseName"]]
-        
+        place <- gsub("G&CC", "Golf and Country Club", place)
         place <- gsub("GC", "Golf Club", place)
         place <- gsub("CC", "Country Club", place)
         place <- paste(place, course[["city"]], course[["state"]], sep="+")
@@ -206,6 +223,8 @@ fillMissingZips <- function(course){
             
             #try again use just city and state
             place <- course[["courseName"]]
+            
+            place <- gsub("Bay GC", "Bay Golf Course", place)
             place <- gsub("GC", "Golf Club", place)
             place <- gsub("CC", "Country Club", place)
             place <- gsub(" ", "+", place)
@@ -267,6 +286,8 @@ fillMissingZips <- function(course){
         
         addressComponents <- place.detailsJSON$result$address_components
         zip <- addressComponents[which(addressComponents$types == "postal_code"),]$long_name
+        
+        
         print(zip)
     } else{
         zip <- course[["zipCode"]]
