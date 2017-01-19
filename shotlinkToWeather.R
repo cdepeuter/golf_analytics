@@ -7,7 +7,7 @@
 
 source("./loadData.R")
 source("./utils.R")
-source("./scrapeWeather.R")
+source("./scrape/weather.R")
 
 shotlink.directory <- "./data/shotlink"
 allFiles <- list.files(shotlink.directory)
