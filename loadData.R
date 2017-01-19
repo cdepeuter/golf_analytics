@@ -1,15 +1,15 @@
-debug.debug=TRUE
-debug.print <- function(x){if(debug.debug){print(x)}}
 
-season <- "2015"
+
+season <- "2016"
+#season <- "2015"
 filename <- paste0("./data/events_US_latlong_", season, ".csv")
 
 if(file.exists(filename)){
     #load data from file
     events.us <- read.csv(filename)
 }else{
-    source("./scrapeEvents.R")
-    source("./scrapeElevation.R")
+    source("./scrape/events.R")
+    source("./scrape/elevation.R")
     #file doesnt exist, scrape it
     events <- getEventsForSeason(season)
     

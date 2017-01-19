@@ -84,7 +84,7 @@ getWeatherForTournaments <- function(courses){
     
     infos <- apply(courses, 1, getWeatherForTournament)
     df <- do.call("rbind", infos)
-    colnames(df) <- c("course", "tournament", "day1_obs", "day2_obs", "day3_obs", "day4_obs", "day5_obs", "day6_obs", "airport_code", "air_course_dist")
+    colnames(df) <- c("course", "tournament", "day1_obs", "day2_obs", "day3_obs", "day4_obs", "day5_obs", "day6_obs", "airport_code", "air_course_dist_miles")
     return(df)
 }
 
