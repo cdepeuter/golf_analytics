@@ -10,7 +10,7 @@ barclays <- getEventByEventName(events.us, "The Barclays")
 tpcBoston <- getEventByCourseName(events.us, "TPC Boston")
 innisbrook <- getEventByEventName(events.us, "Valspar Championship")
 congressional <- getEventByEventName(events.us, "Quicken Loans National")
-
+#rtj trail "lat": 32.6789455, "lng": -85.4224935
 
 #latitude/longitude
 pga.coordinates <- c(40.70502,-74.32799)

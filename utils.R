@@ -23,3 +23,19 @@ getUrlResponse <- function(url){
         content(as="text")
     return(html)
 }
+
+getProvizForCourse <- function(course){
+    
+    
+    candidates <- list.files("./data/proviz/")
+    candidates.scores <-  unlist(lapply(candidates ,function(x, c){
+            x <- gsub("proviz-", "", x)
+            c <- gsub(" ", "", c)
+            c <- gsub("[(]|[)]", "", c)
+
+            return(levenshteinSim(x, c))
+        
+        }, course))
+    
+    return( paste(candidates[which.max(candidates.scores)], max(candidates.scores)))
+}
