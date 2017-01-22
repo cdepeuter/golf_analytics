@@ -20,11 +20,7 @@ shinyServer(function(input, output, session) {
                 lis[[i]] <- list(i,grid$x[i],grid$y[i])
             }
             
-            # lis <- apply(grid, 1, function(xr){
-            #     return(list(xr[["x"]],xr[["y"]]) )
-            # })
-            # 
-            
+
             #This code creates the variable test directly in javascript for export the grid in the Google Maps API  
             #I have taken this part from:http://stackoverflow.com/questions/26719334/passing-json-data-to-a-javascript-object-with-shiny  
             paste('<script>test=',   

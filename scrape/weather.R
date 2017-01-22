@@ -21,18 +21,24 @@ getWugDateFormat <- function(dateStr){
 
 getWeatherForTournament <- function(course){
     #get all dates for tourney
-    debug.print(paste("weather for tourney", course[["label"]]))
-    dates <- seq.Date(as.Date(course[["start"]]), as.Date(course[["end"]]), by="day")
+    # commented out is for ESPN col names
+    #debug.print(paste("weather for tourney", course[["label"]]))
+    debug.print(paste("weather for tourney", course[["tourn"]]))
+    
+    # get weather for 3 days before tournament
+    dates <- seq.Date(as.Date(course[["start"]])-3, as.Date(course[["end"]]), by="day")
     
     ret <- list()
-    ret[1] <- course[["courseName"]]
-    ret[2] <- course[["label"]]
+    #ret[1] <- course[["courseName"]]
+    #ret[2] <- course[["label"]]
+    ret[1] <- course[["course.1"]]
+    ret[2] <- course[["tourn"]]
     
     #getWeatherObservationsForCourseDate
     nDates <- length(dates)
     
     #hope 6 is the max number of days in tourney
-    for(i in 1:6){
+    for(i in 1:9){
         if(i <= length(dates)){
             date <- dates[i]
             

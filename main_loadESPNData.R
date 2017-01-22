@@ -11,9 +11,9 @@ if(file.exists(filename)){
     source("./scrape/events.R")
     source("./scrape/elevation.R")
     #file doesnt exist, scrape it
-    events <- getEventsForSeason(season)
+    events <- getESPNEventsForSeason(season)
     
-    events.addressInfo <- lapply( events$id, getEventAddress)
+    events.addressInfo <- lapply( events$id, getEventAddressESPN)
     events.addressInfo <- do.call(rbind,events.addressInfo)
     
     #if a tournament has multiple courses (laquinta-2483) itll have duplicate entries

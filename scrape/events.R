@@ -1,7 +1,26 @@
 #first grabbing all tournaments for given season
 googleKey <- 'AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg'
 
-getEventsForSeason <- function(season){
+
+getPGAEventsForSeason <- function(season){
+    # read event info from pga/shotlink file
+    
+    events <- read.table(paste0("./data/event_course_date/event_course_date-", season, ".txt"), sep=";", header=TRUE, stringsAsFactors = FALSE)
+    events$start <- as.Date(paste(events$min_year, events$min_month, events$min_day, sep="/"), format="%Y/%m/%d")
+    events$end <- as.Date(paste(events$max_year, events$max_month, events$max_day, sep="/"), format="%Y/%m/%d")
+    
+    #filter columns
+    events <- events[, !(colnames(events) %in% c("min_month", "max_month", "min_year", "max_year", "min_date", "max_date", "X" ))]
+    
+    # last row empty? 
+    if(is.na(events[length(events$course.1),]$perm_tourn)){
+        events <- events[1:length(events$course.1)-1 ,]
+    }
+    
+    return(events)
+}
+
+getESPNEventsForSeason <- function(season){
   
   #get all season data, turn that into json
   tourUrl <- "http://site.api.espn.com/apis/site/v2/sports/golf/pga/tourschedule?season="
@@ -29,8 +48,28 @@ getEventsForSeason <- function(season){
   return(events)
 }
 
+getLocationForPGAEvent <- function(event){
+    
+    #google places api has a much smaller limit, can only do 100 of these requests a day 
+    maps.place <- gsub(" ", "+",  event[["course.1"]])
+    maps.url <- paste0("https://maps.googleapis.com/maps/api/place/textsearch/json?query=",maps.place, "&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg")
+    debug.print(paste("getting location for event", maps.url))
+    
+    maps.json <- fromJSON(getUrlResponse(maps.url))
+    
+    if(length(maps.json$results) == 0){
+        debug.print(paste("No location for place", event[["course.1"]]))
+        maps.latlong <- c(NA, NA)
+    }else{
+        maps.latlong <- maps.json$results[[1]]$geometry$location
+    }
+  
+    return(unlist(maps.latlong))
+    
+}
 
-getEventAddress <- function(id){
+
+getEventAddressESPN <- function(id){
   # given an espn eventId, get the address info for espn event
   # input: id
   # output: data frame with city, state, zipCode, country
