@@ -3,19 +3,30 @@ googleKey <- 'AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg'
 
 
 getPGAEventsForSeason <- function(season){
-    # read event info from pga/shotlink file
+    # if latlong file exists read that, if not read event info from pga/shotlink file
     
-    events <- read.table(paste0("./data/event_course_date/event_course_date-", season, ".txt"), sep=";", header=TRUE, stringsAsFactors = FALSE)
-    events$start <- as.Date(paste(events$min_year, events$min_month, events$min_day, sep="/"), format="%Y/%m/%d")
-    events$end <- as.Date(paste(events$max_year, events$max_month, events$max_day, sep="/"), format="%Y/%m/%d")
+    processed_file <- paste0("./data/event_course_date/events_", season, "_latlong.csv")
     
-    #filter columns
-    events <- events[, !(colnames(events) %in% c("min_month", "max_month", "min_year", "max_year", "min_date", "max_date", "X" ))]
-    
-    # last row empty? 
-    if(is.na(events[length(events$course.1),]$perm_tourn)){
-        events <- events[1:length(events$course.1)-1 ,]
+    if(file.exists(processed_file)){
+        debug.print("getting season data from file")
+        events <- read.table(processed_file, header=TRUE, stringsAsFactors = FALSE)
+        
+    } else{
+        debug.print("getting data from shotlink")
+        events <- read.table(paste0("./data/event_course_date/event_course_date-", season, ".txt"), sep=";", header=TRUE, stringsAsFactors = FALSE)
+        events$start <- as.Date(paste(events$min_year, events$min_month, events$min_day, sep="/"), format="%Y/%m/%d")
+        events$end <- as.Date(paste(events$max_year, events$max_month, events$max_day, sep="/"), format="%Y/%m/%d")
+        
+        #filter columns
+        events <- events[, !(colnames(events) %in% c("min_month", "max_month", "min_year", "max_year", "min_date", "max_date", "X" ))]
+        
+        # last row empty? 
+        if(is.na(events[length(events$course.1),]$perm_tourn)){
+            events <- events[1:length(events$course.1)-1 ,]
+        }
     }
+    
+    
     
     return(events)
 }
@@ -55,13 +66,13 @@ getLocationForPGAEvent <- function(event){
     maps.url <- paste0("https://maps.googleapis.com/maps/api/place/textsearch/json?query=",maps.place, "&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg")
     debug.print(paste("getting location for event", maps.url))
     
-    maps.json <- fromJSON(getUrlResponse(maps.url))
+    maps.json <- jsonlite::fromJSON(getUrlResponse(maps.url))
     
     if(length(maps.json$results) == 0){
         debug.print(paste("No location for place", event[["course.1"]]))
         maps.latlong <- c(NA, NA)
     }else{
-        maps.latlong <- maps.json$results[[1]]$geometry$location
+        maps.latlong <- maps.json$results$geometry$location
     }
   
     return(unlist(maps.latlong))
@@ -77,13 +88,13 @@ getEventAddressESPN <- function(id){
   baseUrl <- "http://site.api.espn.com/apis/site/v2/sports/golf/leaderboard?event="
   tail <- "&lang=en&region=us"
   
-  #make request, format in json, then dataframe using fromJSON
+  #make request, format in json, then dataframe using jsonlite::fromJSON
   
   eventJSON.reqUrl <- paste(baseUrl, id, tail, sep="")
   print(paste("making req for tourney", id, eventJSON.reqUrl))
   eventJSON.req <- GET(eventJSON.reqUrl)
   eventJSON <- content(eventJSON.req, as="text")
-  eventJSON.obj <- fromJSON(eventJSON)
+  eventJSON.obj <- jsonlite::fromJSON(eventJSON)
   
   #get address info from nested data frame
   addrInfo <- eventJSON.obj$events$courses[[1]]$address
@@ -151,7 +162,7 @@ getLatLongByPlaceName <- function(course){
     place.json  <- place.url %>%
         GET() %>%
         content(as="text") %>%
-        fromJSON()
+        jsonlite::fromJSON()
   
     if(length(place.json$predictions) == 0){
         #remove ( ) from string, add town + state, retry req
@@ -193,7 +204,7 @@ getLatLongByPlaceName <- function(course){
         place.json  <- place.url %>%
           GET() %>%
           content(as="text") %>%
-          fromJSON()
+          jsonlite::fromJSON()
       
     }
     
@@ -215,7 +226,7 @@ getLatLongByPlaceName <- function(course){
     place.detailsJSON <- place.detailsUrl %>% 
                             GET() %>%
                             content(as="text") %>%
-                            fromJSON()
+                            jsonlite::fromJSON()
     
     #return lat & long
     place.latLong <- unlist(place.detailsJSON$result$geometry$location)
@@ -249,7 +260,7 @@ fillMissingZips <- function(course){
         place.json  <- place.url %>%
             GET() %>%
             content(as="text") %>%
-            fromJSON()
+            jsonlite::fromJSON()
         
         #get placeID of top result
         
@@ -277,7 +288,7 @@ fillMissingZips <- function(course){
             place.json  <- place.url %>%
                 GET() %>%
                 content(as="text") %>%
-                fromJSON()
+                jsonlite::fromJSON()
             
             #get placeID of top result
             
@@ -301,7 +312,7 @@ fillMissingZips <- function(course){
                 place.json  <- place.url %>%
                     GET() %>%
                     content(as="text") %>%
-                    fromJSON()
+                    jsonlite::fromJSON()
                 
                 #get placeID of top result
                 
@@ -321,7 +332,7 @@ fillMissingZips <- function(course){
         place.detailsJSON <- place.detailsUrl %>% 
             GET() %>%
             content(as="text") %>%
-            fromJSON()
+            jsonlite::fromJSON()
         
         addressComponents <- place.detailsJSON$result$address_components
         zip <- addressComponents[which(addressComponents$types == "postal_code"),]$long_name

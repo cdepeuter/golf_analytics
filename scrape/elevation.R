@@ -25,7 +25,7 @@ getElevationAtPoint <- function(lat, long){
   elevation.json <- elevation.url %>%
     GET() %>%
     content(as="text") %>%
-    fromJSON()
+    jsonlite::fromJSON()
   
   #grab elevation from response json, convert to feet
   elevation <- elevation.json$results$elevation
@@ -45,7 +45,7 @@ getElevationAtPoints <- function(pointString){
   elevation.json <- elevation.url %>%
     GET() %>%
     content(as="text") %>%
-    fromJSON()
+    jsonlite::fromJSON()
   
   #grab elevation from response json, convert to feet
   elevation <- elevation.json$results$elevation
