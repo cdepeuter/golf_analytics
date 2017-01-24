@@ -1,6 +1,9 @@
 # load pga data
-source("./main_loadPGAData.R")
 
+source("./scrape/events.R")
+
+
+pga <- getPGAEventsForSeason(season)
 proviz.files <-lapply(pga$course.1, getProvizForCourse)
 proviz.df <-data.frame(matrix(mapply(c, pga$course.1, proviz.files), byrow=T, nrow=length(proviz.files)))
 colnames(proviz.df) <- c("course", "file", "score")
