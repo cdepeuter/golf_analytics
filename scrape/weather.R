@@ -60,7 +60,7 @@ getWeatherForTournament <- function(course){
     air <- substring(strsplit(wObs$metar[1], split = " ")[[1]][[2]], 2)
     debug.print(paste("airport code", air)) 
     
-    ret[9] <- air
+    ret[12] <- air
     
     #getAirport location
     airLoc <- getAirportLocation(air)
@@ -78,7 +78,7 @@ getWeatherForTournament <- function(course){
         dist <- distVincentySphere(airLoc, courseLoc) * 0.000621371 
     }
     
-    ret[10] <- dist
+    ret[13] <- dist
     
     debug.print(paste("Distance between course and measurements", dist))
     
@@ -88,9 +88,19 @@ getWeatherForTournament <- function(course){
 getWeatherForTournaments <- function(courses){
     #get meta weather info for each course/date
     
-    infos <- apply(courses, 1, getWeatherForTournament)
+    ## unfortunate for loop but need to pause requests every minute because of rate limit
+    infos <- list()
+    for(i in 1:dim(courses)[1]){
+        infos[[i]] <- getWeatherForTournament(courses[i,])
+        
+        #sleep for 10 seconds
+        debug.print("Sleeping for 1 minute")
+        Sys.sleep(60)
+    }
+   
     df <- do.call("rbind", infos)
-    colnames(df) <- c("course", "tournament", "day1_obs", "day2_obs", "day3_obs", "day4_obs", "day5_obs", "day6_obs", "airport_code", "air_course_dist_miles")
+    print(dim(df))
+    colnames(df) <- c("course", "tournament","pre3_obs", "pre2_obs", "pre1_obs", "day1_obs", "day2_obs", "day3_obs", "day4_obs", "day5_obs", "day6_obs", "airport_code", "air_course_dist_miles")
     return(df)
 }
 
@@ -142,12 +152,12 @@ getWeatherObservationsForCourseDate <- function(course, dateStr){
     }
     
     
-    weatherJSON <- fromJSON(weatherContent)
+    weatherJSON <- jsonlite::fromJSON(weatherContent)
     observations <- weatherJSON$history$observations
     
     # TODO CHECK TIMEZONE DATA
     # maybe use UTC if this is an issue
-    if(observations$date$tzname[1] !="America/New_York"){
+    if(weatherJSON$history$date$tzname !="America/New_York"){
         print("TIMEZONE NOT STANDARD");
     }
     
@@ -181,7 +191,7 @@ getDailyDataFromWeatherResp <- function(weatherContent){
   # output: field from response in named list
   
   #put json into table
-  weatherJSON <- fromJSON(weatherContent)
+  weatherJSON <- jsonlite::fromJSON(weatherContent)
   
   dailySummary <- weatherJSON$history$dailysummary
   
@@ -203,7 +213,7 @@ getObservationsFromWeather <- function(weatherContent){
     # input: weather underground json observation string
     # output: dataframe of observations
     
-    weatherJSON <- fromJSON(weatherContent)
+    weatherJSON <- jsonlite::fromJSON(weatherContent)
     observations <- weatherJSON$history$observations
     
     # TODO CHECK TIMEZONE DATA
@@ -278,7 +288,7 @@ getAirportLocation <- function(code){
     place.json  <- place.url %>%
         GET() %>%
         content(as="text") %>%
-        fromJSON()
+        jsonlite::fromJSON()
     
     place.placeId <- place.json$predictions$place_id[1]
     
@@ -296,7 +306,7 @@ getAirportLocation <- function(code){
     place.detailsJSON <- place.detailsUrl %>% 
         GET() %>%
         content(as="text") %>%
-        fromJSON()
+        jsonlite::fromJSON()
     
     #return lat & long
     place.latLong <- unlist(place.detailsJSON$result$geometry$location)

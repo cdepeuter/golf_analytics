@@ -1,11 +1,20 @@
 source("./scrape/events.R")
+source("./scrape/weather.R")
+#seasons <- c("2015","2016")
+seasons <- c("2016")
 
-pga <- getPGAEventsForSeason("2016")
-pga.coord <- apply(pga, 1, getLocationForPGAEvent)
-
-
-#currently over my pga rate limit, hard code to keep going with weather stuff
-rtj <- pga[29,]
-rtj[["lat"]] <-32.6789455
-rtj[["lng"]] <- -85.4224935
-
+for(season in seasons){
+    
+    pga <- getPGAEventsForSeason(season)
+    
+    if(!("lat" %in% colnames(pga))){
+        # add coordinates for course since we dont have them
+        pga.coord <- apply(pga, 1, getLocationForPGAEvent)
+        pga <- cbind(pga, t(pga.coord))
+        write.table(pga, paste0("./data/event_course_date/events_",season,"_latlong.csv"), row.names = FALSE)
+        
+    }
+  
+    weathers <- getWeatherForTournaments(pga)
+    write.table(weathers, paste0("./data/meta_weather_pga_", season, ".csv"), row.names = FALSE)
+}
