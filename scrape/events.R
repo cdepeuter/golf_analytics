@@ -26,8 +26,6 @@ getPGAEventsForSeason <- function(season){
         }
     }
     
-    
-    
     return(events)
 }
 
@@ -59,20 +57,20 @@ getESPNEventsForSeason <- function(season){
   return(events)
 }
 
-getLocationForPGAEvent <- function(event){
+getLocationForPGACourse <- function(course){
     
     #google places api has a much smaller limit, can only do 100 of these requests a day 
-    maps.place <- gsub(" ", "+",  event[["course.1"]])
+    maps.place <- gsub(" ", "+",  course)
     maps.url <- paste0("https://maps.googleapis.com/maps/api/place/textsearch/json?query=",maps.place, "&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg")
     debug.print(paste("getting location for event", maps.url))
     
     maps.json <- jsonlite::fromJSON(getUrlResponse(maps.url))
     
     if(length(maps.json$results) == 0){
-        debug.print(paste("No location for place", event[["course.1"]]))
+        debug.print(paste("No location for place", course))
         maps.latlong <- c(NA, NA)
     }else{
-        maps.latlong <- maps.json$results$geometry$location
+        maps.latlong <- maps.json$results$geometry$location[1,]
     }
   
     return(unlist(maps.latlong))
