@@ -24,4 +24,4 @@ tournaments$course.1 <- unlist(lapply(tournaments$course.1,trimws))
 
 all.courses <- unique(tournaments$course.1)
 
-courses.coordinates <- lapply(all.courses, getLocationForPGACourse)
+courses.coordinates <- unlist(lapply(all.courses, getLocationForPGACourse))

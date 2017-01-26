@@ -13,6 +13,6 @@ library(geosphere)
 
 #for testing
 library(testthat)
-
+library(devtools)
 
 library(shiny)
