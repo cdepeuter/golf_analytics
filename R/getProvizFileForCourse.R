@@ -10,6 +10,7 @@
 
 
 getProvizFileForCourse <- function(course){
+    
     fileName <- "./data/proviz/exceptions.txt"
     candidateFiles <- "./data/proviz/"
     if(!file.exists(fileName)){
@@ -26,14 +27,21 @@ getProvizFileForCourse <- function(course){
     }
     
     candidates <- list.files(candidateFiles)
+    #print(candidates)
     candidates.scores <-  unlist(lapply(candidates ,function(x, course){
         x <- gsub("proviz-", "", x)
         c <- gsub(" ", "", course)
-        c <- gsub("[(]|[)]", "", course)
+        c <- gsub("[(]|[)]", "", c)
         
-        return(levenshteinSim(x, course))
+        #return(stringdist(x, c, method = "jw"))
+        return(levenshteinSim(x, c))
         
     }, course))
     
-    return(trimws(candidates[which.max(candidates.scores)]))
+    
+    winner <- trimws(candidates[which.max(candidates.scores)])
+    winner <- gsub("proviz-", "", winner)
+    winner <- gsub(".csv", "", winner)
+    
+    return(winner)
 }

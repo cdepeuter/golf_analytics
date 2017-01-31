@@ -67,7 +67,7 @@ getPGAEvents <- function(startYear=0, endYear=10000, course = NA, tournament = N
     # clean dates
     tournaments$start <- as.Date(paste(tournaments$min_year, tournaments$min_month, tournaments$min_day, sep="/"), format="%Y/%m/%d")
     tournaments$end <- as.Date(paste(tournaments$max_year, tournaments$max_month, tournaments$max_day, sep="/"), format="%Y/%m/%d")
-    tournaments <- tournaments[, !(colnames(tournaments) %in% c("min_month", "max_month", "min_year", "max_year", "min_date", "max_date", "X" ))]
+    tournaments <- tournaments[, !(colnames(tournaments) %in% c("min_month", "max_month", "min_year", "max_year", "min_day", "max_day", "X" ))]
     
     
     #filter by course/tournament
