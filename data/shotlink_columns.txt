@@ -1,0 +1,44 @@
+% columns of pga shot file
+%  1    Tour Code
+%  2    Tour Description
+%  3    Year
+%  4    Tourn.#
+%  5    Player #
+%  6    Course #
+%  7    Permanent Tournament #
+%  8    Player First Name
+%  9    Player Last Name
+%  10   Round
+%  11   Tournament Name
+%  12   Course Name
+%  13   Hole
+%  14   Hole Score
+%  15   Par Value
+%  16   Yardage
+%  17   Shot
+%  18   Shot Type(S/P/D)
+%  19   # of Strokes
+%  20   From Location(Scorer)
+%  21   From Location(Enhanced)
+%  22   To Location(Scorer)
+%  23   To Location(Enhanced)
+%  24   Distance
+%  25   Distance to Pin
+%  26   In the Hole Flag
+%  27   Around the Green Flag
+%  28   1st Putt Flag
+%  29   Distance to Hole after the Shot
+%  30   Time
+%  31   Lie
+%  32   Elevation
+%  33   Slope
+%  34   X coorinate
+%  35   Y coorinate
+%  36   Z coorinate
+%  37   Distance from Center
+%  38   Distance from Edge
+%  39   Date
+%  40   Left/Right
+%  41   Strokes Gained/Baseline
+%  42   Strokes Gained Category
+%  43   Recovery Shot

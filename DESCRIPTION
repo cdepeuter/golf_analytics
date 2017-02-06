@@ -9,11 +9,13 @@ Maintainer: Conrad De Peuter <conrad.depeuter@gmail.com>
 Description: This package provides utilties to match weather data and shot data
 License: GPL-2
 Imports:
-    dplyr,
+    tidyverse,
     jsonlite,
     httr,
     RecordLinkage,
     geosphere,
-    shiny
+    shiny,
+    stringdist,
+    testthat
 RoxygenNote: 5.0.1
-Suggests: testthat
+Suggests: 
