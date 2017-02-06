@@ -80,6 +80,19 @@ test_that("Proviz exceptions", expect_equal(getProvizFileForCourse("Plantation C
 test_that("Proviz regular", expect_equal(getProvizFileForCourse("Baltusrol GC"), "proviz-baltusrollower.csv"))
 
 
+# test elevation
+test_that("elevations", expect_equal(getElevationAtPoints("40.744913874491,-73.452969145297|40.746631974663,-73.446830244683"), c(83.6151067201996, 144.5454170645142)))
 
 
+#test coordinates / elevation
+cc <- getCleanProvizForCourse("Congressional CC (Blue)")
+test_that("congressional hole",  expect_equivalent(as.numeric(cc[10, c("hole_z", "hole_lat", "hole_lon")]), c(221.356001000061, 38.993882699388, -77.17630461763)))
+test_that("congressional tee",  expect_equivalent(as.numeric(cc[5, c("hole_z", "hole_lat", "hole_lon")]), c(306.084535035706, 39.000688500069, -77.183214818321)))
+test_that("congressional mid",  expect_equivalent(as.numeric(cc[14, c("midpt1_z", "midpt1_lat", "midpt1_lon")]), c(234.728467748108, 38.990486099049, -77.173308517331)))
+
+#torrey pines
+tp <- getCleanProvizForCourse("Torrey Pines GC (South)")
+test_that("torrey pines hole",  expect_equivalent(as.numeric(tp[1, c("hole_z", "hole_lat", "hole_lon")]), c(366.286517272644,32.902284290228 ,-117.24938372494)))
+test_that("torrey pines tee",  expect_equivalent(as.numeric(tp[12, c("tee_z", "tee_lat", "tee_lon")]), c(372.177746685181, 32.890328689033, -117.24520322452)))
+test_that("torrey pines min",  expect_equivalent(as.numeric(tp[9, c("midpt1_z", "midpt1_lat", "midpt1_lon")]), c(388.053420862732 , 32.897516089752, -117.24417632442)))
 
