@@ -31,25 +31,6 @@ getESPNEventsForSeason <- function(season){
 }
 
 
-getLocationForPGACourse <- function(course){
-    
-    #google places api has a much smaller limit, can only do 100 of these requests a day 
-    maps.place <- gsub(" ", "+",  course)
-    maps.url <- paste0("https://maps.googleapis.com/maps/api/place/textsearch/json?query=",maps.place, "&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg")
-    debug.print(paste("getting location for event", maps.url))
-    
-    maps.json <- jsonlite::fromJSON(getUrlResponse(maps.url))
-    
-    if(length(maps.json$results) == 0){
-        debug.print(paste("No location for place", course))
-        maps.latlong <- c(NA, NA)
-    }else{
-        maps.latlong <- maps.json$results$geometry$location[1,]
-    }
-    
-    return(unlist(maps.latlong))
-    
-}
 
 
 getEventAddressESPN <- function(id){
@@ -325,89 +306,8 @@ fillMissingZips <- function(course){
 
 
 #key for weather underground api calls
-wugKey <-"8569324e20ad844f"
 
 
-
-getWeatherObservationsForCourseDate <- function(course, dateStr){
-    # get weather info json response for event at given address on date
-    # input: course info with city, state, zip(maybe)
-    # output json response from weather underground api
-    
-    # DONT run this function in vectorized format on an array
-    # weatherUnderground maxes API calls at 10 per minute
-    
-    #get weather and addr for filename
-    wugDateStr <- getWugDateFormat(dateStr)
-    
-    #take spaces out of city
-    if(!is.null(course[["lat"]]) && !is.null(course[["lng"]])){
-        addr <- paste(course[["lat"]], course[["lng"]], sep=",") 
-    } else if(!is.null(course[["zipCode"]])){
-        addr <- course[["zipCode"]]
-        if(nchar(as.character(addr)) == 4){
-            #if leading 0 is removed we want to add one
-            addr <- paste0("0", as.character(addr))
-        }
-    }else if(!is.null(course[["city"]]) && !is.null(course[["state"]])){
-        city <- course[["city"]]
-        city <- gsub(" ", "_", city)
-        addr <- paste(course[["state"]], "/", city)
-    }else{
-        return("Not enough info to fetch weather")
-    }
-    
-    
-    filename <- paste0("./data/weather/",addr, "-", wugDateStr, ".json")
-    filename <- gsub(" ", "", filename)
-    
-    if(file.exists(filename)){
-        debug.print(paste("getting", filename, "locally"))
-        weatherContent <- read_file(filename)
-    }else{
-        #no weather locally, grab file and save it
-        
-        wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/", addr, ".json", sep = "")
-        wugUrl <- gsub(" ", "", wugUrl)
-        debug.print(paste("getting weather info ", wugUrl))
-        weatherReq <- GET(wugUrl)
-        weatherContent <- content(weatherReq, as="text")
-        debug.print(paste("saving weather to file", filename))
-        write_file(weatherContent, filename)
-    }
-    
-    
-    weatherJSON <- jsonlite::fromJSON(weatherContent)
-    observations <- weatherJSON$history$observations
-    
-    # TODO CHECK TIMEZONE DATA
-    # maybe use UTC if this is an issue
-    if(weatherJSON$history$date$tzname !="America/New_York"){
-        print("TIMEZONE NOT STANDARD");
-    }
-    
-    
-    #remove nested dataframe and add info in separate columns
-    dateData <- observations$date
-    hr <- observations$date$hour
-    min  <- observations$date$min
-    time <- as.integer(paste(hr, min, sep=""))
-    
-    
-    year <- observations$date$year
-    month <- observations$date$mon
-    day <- observations$date$mday
-    
-    date <- paste(year, month, day, sep="")
-    
-    observations$date <- date
-    observations$time <- time
-    
-    #drop utc nested dataframe, other column which is probably meter name, 
-    observations <- observations[, !(colnames(observations) %in% c("utcdate" ))]
-    
-    return(observations)
-}
 
 
 
@@ -455,69 +355,68 @@ getObservationsFromWeather <- function(weatherContent){
 # get a table of events for the current season, this is currently hardcoded as 2016
 # in loadData.R. With these events, find the event for each shotlink file by date, 
 # and using the zip code for that event find the corresponding weather information
-
-source("./loadData.R")
-source("./utils.R")
-source("./scrape/weather.R")
-
-shotlink.directory <- "./data/shotlink"
-allFiles <- list.files(shotlink.directory)
-
-for(f in allFiles){
-    # only check for txt files
-    if(length(grep(".txt", f)) > 0){
-        
-        # get all shots
-        shots <- read.csv(paste0(shotlink.directory,"/", f), sep=";", header=TRUE)
-        # turn factors into characters
-        shots$Date <- as.character(shots$Date)
-        shots.first <- shots[1,]
-        
-        # unique shot ids
-        shotIds <- apply(shots, 1, getShotId)
-        shots$shotId <- shotIds
-        
-        # get tournament for this event by matching the date of the first shot
-        thisTournament <- events.us[which( as.Date(events.us$start) == as.Date(shots.first$Date, format="%m/%d/%Y")),]
-        
-        
-        # make sure zip is 5 chars, TODO fix globally
-        zipCode <- thisTournament$zipCode
-        if(nchar(as.character(zipCode)) == 4){
-            # if leading 0 is removed we want to add one
-            zipCode <- paste0("0", as.character(zipCode))
-        }
-        
-        
-        # write data to files
-        filePrefix <- paste0("./data/shotlink/processed/shotlink-",gsub(" ", "_", thisTournament$label),"-",season)
-        weatherFile <- paste0( filePrefix,"-",zipCode,"-weather",".csv")
-        shotFile <- paste0(filePrefix,".csv")
-        shotsAndWeatherFile <- paste0(filePrefix, "shots_weather.csv" )
-        
-        # if this tournaments already been processed dont do this again
-        if(!file.exists(weatherFile) && !file.exists(shotFile) && !file.exists(shotsAndWeatherFile)){
-            # get all weather for shots in this file
-            weather <- getAllWeatherForShots(shots, thisTournament)
+process_shotlink <- function(events.us){
+    shotlink.directory <- "./data/shotlink"
+    allFiles <- list.files(shotlink.directory)
+    
+    for(f in allFiles){
+        # only check for txt files
+        if(length(grep(".txt", f)) > 0){
+            
+            # get all shots
+            shots <- read.csv(paste0(shotlink.directory,"/", f), sep=";", header=TRUE)
+            # turn factors into characters
+            shots$Date <- as.character(shots$Date)
+            shots.first <- shots[1,]
+            
+            # unique shot ids
+            shotIds <- apply(shots, 1, getShotId)
+            shots$shotId <- shotIds
+            
+            # get tournament for this event by matching the date of the first shot
+            thisTournament <- events.us[which( as.Date(events.us$start) == as.Date(shots.first$Date, format="%m/%d/%Y")),]
             
             
-            # get weather data for each shot
-            shots.conditions <- apply(shots, 1, getWeatherForShot, weather)
-            shots.weather <- do.call("rbind", shots.conditions)
+            # make sure zip is 5 chars, TODO fix globally
+            zipCode <- thisTournament$zipCode
+            if(nchar(as.character(zipCode)) == 4){
+                # if leading 0 is removed we want to add one
+                zipCode <- paste0("0", as.character(zipCode))
+            }
             
-            #bind tables, write to output
-            shots.and.weather <- cbind(shots, shots.weather)
-            shots.weather$shotId <- shotIds
             
-            write.table(shots.weather, weatherFile, sep=",", row.names = FALSE)
-            write.table(shots, shotFile, sep = ",", row.names = FALSE) 
-            write.table(shots.and.weather, shotsAndWeatherFile, sep = ",", row.names = FALSE) 
+            # write data to files
+            filePrefix <- paste0("./data/shotlink/processed/shotlink-",gsub(" ", "_", thisTournament$label),"-",season)
+            weatherFile <- paste0( filePrefix,"-",zipCode,"-weather",".csv")
+            shotFile <- paste0(filePrefix,".csv")
+            shotsAndWeatherFile <- paste0(filePrefix, "shots_weather.csv" )
+            
+            # if this tournaments already been processed dont do this again
+            if(!file.exists(weatherFile) && !file.exists(shotFile) && !file.exists(shotsAndWeatherFile)){
+                # get all weather for shots in this file
+                weather <- getAllWeatherForShots(shots, thisTournament)
+                
+                
+                # get weather data for each shot
+                shots.conditions <- apply(shots, 1, getWeatherForShot, weather)
+                shots.weather <- do.call("rbind", shots.conditions)
+                
+                #bind tables, write to output
+                shots.and.weather <- cbind(shots, shots.weather)
+                shots.weather$shotId <- shotIds
+                
+                write.table(shots.weather, weatherFile, sep=",", row.names = FALSE)
+                write.table(shots, shotFile, sep = ",", row.names = FALSE) 
+                write.table(shots.and.weather, shotsAndWeatherFile, sep = ",", row.names = FALSE) 
+            }
         }
     }
 }
 
 
-do_metawrite <- function(){
+
+
+do_metawrite <- function(events.us){
     metaWeather <- getWeatherForTournaments(events.us)
     metaWeatherFile <- paste0("./data/meta_weather_us_", season, ".csv")
     

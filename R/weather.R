@@ -1,3 +1,66 @@
+#' Scrape weather info for all dates in a tournament
+#'
+#' This grabs the weather response for 3 days before up to the end of a tournament
+#' @param event from getPGAEvents() function
+#' @return 
+#' @export
+#' @examples
+#' scrapeWeatherForTournament(masters09)
+
+scrapeWeatherForTournament <- function(e){
+    # get weather for 3 days before tournament
+    dates <- seq.Date(as.Date(e[["start"]])-3, as.Date(e[["end"]]), by="day")
+    
+    t <- lapply(dates, getWeatherResponseForCourseDate, e)
+}
+
+
+#' Scrape weather info for all tournaments
+#'
+#' This grabs the weather response for 3 days before up to the end of multiple tournaments
+#' respecting the rate limit of the weather underground api
+#' @param event from getPGAEvents() function
+#' @return 
+#' @export
+#' @examples
+#' scrapeWeatherForTournaments(events)
+scrapeWeatherForTournaments <- function(events){
+    #scrape weather, sleep so limit is not reached
+    apply(events, 1, function(event){
+        scrapeWeatherForTournament(event)
+        Sys.sleep(60)
+    })
+}
+
+
+tournamentWeatherSummary <- function(event){
+    dates <- seq.Date(as.Date(event[["start"]])-3, as.Date(event[["end"]]), by="day")
+    retinfo <- data.frame(event[["course.1"]])
+    whichDate <- -3
+    print(length(dates))
+    for(i in  1:length(dates)){
+        
+        date <- dates[i]
+        print(date)
+        resp <- getWeatherResponseForCourseDate(date, event)
+        resp.json <- jsonlite::fromJSON(resp)
+        statsIWant <- c("precipi", "maxwspdi", "minwspdi" ,"meanwindspdi", "meanwdird")
+        statsRName <- c("precip_inches_day_", "max_wind_mph_day_", "min_wind_mph_day_", "mean_wind_mph_day_", "mean_wind_dir_degrees_day_")
+        statsRName <- paste0(statsRName, as.character(whichDate))
+        relevantInfo <- resp.json$history$dailysummary[statsIWant]
+        colnames(relevantInfo) <- statsRName
+        retinfo <- cbind(retinfo, data.frame(relevantInfo, check.names = FALSE))
+        retinfo$start_date <- as.Date(event[["start"]])
+        whichDate <- whichDate + 1 
+        if(whichDate == 0){
+            whichDate <- whichDate + 1
+        }
+        
+    }
+    
+    return(retinfo)
+}
+
 #' Get a summary of weather for an event
 #'
 #' This function finds summary weather data for an individual golf event
@@ -7,18 +70,16 @@
 #' @examples
 #' getWeatherForTournament()
 
-
-getWeatherForTournament <- function(event){
-    
+getWeatherForTournament <- function(course){
     
     # get weather for 3 days before tournament
-    dates <- seq.Date(as.Date(course[["start"]])-3, as.Date(event[["end"]]), by="day")
+    dates <- seq.Date(as.Date(course[["start"]])-3, as.Date(course[["end"]]), by="day")
     
     ret <- list()
     ret[1] <- course[["course.1"]]
     ret[2] <- course[["tourn"]]
     
-    #getWeatherObservationsForCourseDate
+    #getWeatherResponseForCourseDate
     nDates <- length(dates)
     
     #hope 6 is the max number of days in tourney
@@ -29,7 +90,7 @@ getWeatherForTournament <- function(event){
             
             #file should save, thats what we really want
             #but from this response check out airport code
-            wObs <- getWeatherObservationsForCourseDate(course, date)
+            wObs <- getWeatherResponseForCourseDate(date, course)
             nObs <- dim(wObs)[1]
             
             ret[i+2] <- nObs
@@ -42,7 +103,7 @@ getWeatherForTournament <- function(event){
     
     #keep track of metar/airport code
     air <- substring(strsplit(wObs$metar[1], split = " ")[[1]][[2]], 2)
-    debug.print(paste("airport code", air)) 
+    paste("airport code", air)
     
     ret[12] <- air
     
@@ -54,8 +115,6 @@ getWeatherForTournament <- function(event){
     courseLoc <- as.vector(as.double(c(course[["lng"]], course[["lat"]])))
     
     #get Distance convert to miles
-    debug.print(courseLoc)
-    debug.print(airLoc)
     if(is.null(courseLoc) | is.null(airLoc)){
         dist <- NA
     }else{
@@ -248,7 +307,7 @@ getAllWeatherForShots <- function(shots, course){
     weathers <- list()
     
     for(i in 1:length(dates)){
-        weathers[[i]] <- getWeatherObservationsForCourseDate(course, dates[i])
+        weathers[[i]] <- getWeatherResponseForCourseDate( dates[i], course)
     }
     
     names(weathers) <- dates
@@ -257,18 +316,46 @@ getAllWeatherForShots <- function(shots, course){
 }
 
 
-getWeatherForShot <- function(shot, weather){
-    # for a given shot, find the weather observation with the closest time
-    # assuming the observations are at the right zip code and date
-    # input: shot in shotlink format, observations in weatherUnderground format
-    # output: rain, wind data
+
+getWeatherResponseForCourseDate <- function(dateStr, course){
+    # get weather info json response for event at given address on date
+    # input: course info with city, state, zip(maybe)
+    # output json response from weather underground api
+    
+    # DONT run this function in vectorized format on an array
+    # weatherUnderground maxes API calls at 10 per minute
+    
+    #get weather and addr for filename
+    wugKey <-"8569324e20ad844f"
+    wugDateStr <- getWugDateFormat(dateStr)
+    addr <- paste(course[["hole_lat"]], course[["hole_lon"]], sep=",") 
+    
+    if(length(addr) == 0){
+        stop("No coordinates for course")
+    }
+    
+    filename <- paste0("./data/weather/",addr, "-", wugDateStr, ".json")
+    filename <- gsub(" ", "", filename)
+    
+    if(file.exists(filename)){
+        debug.print(paste("getting", filename, "locally"))
+        weatherContent <- read_file(filename)
+    }else{
+        #no weather locally, grab file and save it
+        
+        wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/", addr, ".json", sep = "")
+        wugUrl <- gsub(" ", "", wugUrl)
+        debug.print(paste("getting weather info ", wugUrl))
+        weatherReq <- GET(wugUrl)
+        weatherContent <- content(weatherReq, as="text")
+        debug.print(paste("saving weather to file", filename))
+        write_file(weatherContent, filename)
+    }
     
     
-    observations <- weather[shot[["Date"]]][[1]]
-    closestObservation <- observations[which.min(abs(observations$time - as.integer(shot[["Time"]]))),] 
-    
-    dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti","precipi","rain", "conds", "time")
-    dat <- closestObservation[,dataWeWant]
-    colnames(dat) <- c("tempF", "humidity", "wDirDeg","wDir", "windGust","precip","rain", "conds", "weatherTime")
-    return(dat)
+    return(weatherContent)
 }
+
+
+
+
