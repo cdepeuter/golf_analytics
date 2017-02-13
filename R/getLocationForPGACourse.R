@@ -11,9 +11,9 @@
 getLocationForPGACourse <- function(course){
     
     # check lookup first
-    lookup <- read.table("./data/courseCoordinates.csv", header = TRUE, stringsAsFactors = FALSE, sep=",")
-    if(length(which(lookup$all.courses == course)) > 0 ){
-        return(lookup[which(lookup$all.courses == course),2:3])
+    lookup <- read.table("./data/pga-hole-coords.csv", header = TRUE, stringsAsFactors = FALSE, sep=",")
+    if(length(which(lookup$course == course)) > 0 ){
+        return(lookup[which(lookup$course== course)[1],4:5])
     }
     
     #else get through google maps
@@ -32,5 +32,4 @@ getLocationForPGACourse <- function(course){
     }
     
     return(unlist(maps.latlong))
-    
 }
