@@ -2,7 +2,7 @@ Package: golfAnalysis
 Title: Golf Analysis
 Version: 0.1
 Date: 2017-01-26
-Authors@R: c(person("Conrad", "De Peuter"", email = "conrad.depeuter@gmail.com", 
+Authors@R: c(person("Conrad", "De Peuter", email = "conrad.depeuter@gmail.com", 
     role = c("aut", "cre","trl"))
 Author: Conrad De Peuter
 Maintainer: Conrad De Peuter <conrad.depeuter@gmail.com>
@@ -16,6 +16,8 @@ Imports:
     geosphere,
     shiny,
     stringdist,
-    testthat
+    testthat,
+    readr, 
+    chron
 RoxygenNote: 5.0.1
 Suggests: 
