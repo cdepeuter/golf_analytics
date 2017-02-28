@@ -2,8 +2,7 @@ Package: golfAnalysis
 Title: Golf Analysis
 Version: 0.1
 Date: 2017-01-26
-Authors@R: c(person("Conrad", "De Peuter", email = "conrad.depeuter@gmail.com", 
-    role = c("aut", "cre","trl"))
+Authors@R: c(person("Conrad", "De Peuter", email = "conrad.depeuter@gmail.com", role = c("aut", "cre","trl"))
 Author: Conrad De Peuter
 Maintainer: Conrad De Peuter <conrad.depeuter@gmail.com>
 Description: This package provides utilties to match weather data and shot data
