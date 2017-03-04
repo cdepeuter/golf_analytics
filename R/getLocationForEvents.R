@@ -13,5 +13,8 @@
 getLocationForEvents <- function(evnts){
     coords <- lapply(evnts$course.1, getLocationForPGACourse)
     coords <- do.call("rbind", coords)
-    return(cbind(events, coords))
+    evnts <- cbind(evnts, coords)
+    
+    evnts$local_tz <- unlist(apply(evnts, 1, getLocalTZ))
+    return(evnts)
 }
