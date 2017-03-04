@@ -4,3 +4,8 @@
 .Ruserdata
 data/weather/*
 data/shotlink/*
+weather_shots/*
+data/shot_ext_data/*
+data/radar-launch-2016.txt
+data/weathersample.csv
+data/pga-hole-coords.csv
