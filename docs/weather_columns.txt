@@ -1,0 +1,27 @@
+Angle Calculations: 90 - arctan(delta_y, delta_x) * 180/pi (if result is less than 0, add 360 to value)
+
+
+shot_degrees:  For all shots: angle( end_y..feet - start_y, end_x..feet. - start_x)
+
+
+aim_degrees:  	For tee shots:  angle( med_y - start_y, med_x - start_x)
+				For all other shots:  angle(hole_y - start_y, hole_x - start_x)
+
+
+
+wind_shot_angle_diff: the difference in angle between aim_degrees and 180-last_wind_dir_degrees, so difference is calculated from the direction wind is pointing towards, rounded to nearest 20
+
+
+mins_since_obs: number of minutes between the shot and the previous weather observaton
+
+last_wind_speed: speed (mph) of wind at last observation
+last_wind_gust: (mph) Wind gusts are generally reported when the wind speed reaches 16 knots and the variability of the wind from highest point to lowest is more than 9 knots. A gust will usually be defined as less than 20 seconds and is the maximum speed the wind reaches. Unclear at what period this is measured from
+
+last_wind_dir_degrees: direction which wind is coming from, angle measured from north, positive values go east
+
+last_wind_dir: compass direction of wind source
+
+mean_wind_2_hrs_before: mean wind of all weather observations in last 2 hrs
+
+rain_X_hrs_before: sum of precipitation in inches from the shot to X hours before shot
+
