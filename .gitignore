@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 data/weather/*
+data/proviz/*
 data/shotlink/*
 weather_shots/*
 data/shot_ext_data/*
