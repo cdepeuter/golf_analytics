@@ -9,7 +9,7 @@
 
 scrapeWeatherForTournament <- function(e){
     # get weather for 3 days before tournament
-    dates <- seq.Date(as.Date(e[["start"]])-3, as.Date(e[["end"]]), by="day")
+    dates <- seq.Date(as.Date(e[["start"]])-5, as.Date(e[["end"]]), by="day")
     
     t <- lapply(dates, getWeatherResponseForCourseDate, e)
 }
@@ -102,28 +102,28 @@ getWeatherForTournament <- function(course){
     }
     
     #keep track of metar/airport code
-    air <- substring(strsplit(wObs$metar[1], split = " ")[[1]][[2]], 2)
+    air <- " " #substring(strsplit(wObs$metar[1], split = " ")[[1]][[2]], 2)
     paste("airport code", air)
     
     ret[12] <- air
     
     #getAirport location
-    airLoc <- getAirportLocation(air)
-    
+    #airLoc <- getAirportLocation(air)
+    #airloc <- c(1,2)
     #swap lat/long
-    airLoc <- as.vector(c(airLoc[2], airLoc[1]))
-    courseLoc <- as.vector(as.double(c(course[["lng"]], course[["lat"]])))
+    #airLoc <- as.vector(c(airLoc[2], airLoc[1]))
+    #courseLoc <- as.vector(as.double(c(course[["lng"]], course[["lat"]])))
     
-    #get Distance convert to miles
-    if(is.null(courseLoc) | is.null(airLoc)){
-        dist <- NA
-    }else{
-        dist <- distVincentySphere(airLoc, courseLoc) * 0.000621371 
-    }
-    
-    ret[13] <- dist
-    
-    debug.print(paste("Distance between course and measurements", dist))
+    # #get Distance convert to miles
+    # if(is.null(courseLoc) | is.null(airLoc)){
+    #     dist <- NA
+    # }else{
+    #     dist <- distVincentySphere(airLoc, courseLoc) * 0.000621371 
+    # }
+    # 
+     ret[13] <- 4
+    # 
+    # print(paste("Distance between course and measurements", dist))
     
     return(ret)
 }
@@ -226,7 +226,7 @@ getWeatherForTournaments <- function(courses){
         infos[[i]] <- getWeatherForTournament(courses[i,])
         
         #sleep for 10 seconds
-        debug.print("Sleeping for 1 minute")
+        print("Sleeping for 1 minute")
         Sys.sleep(60)
     }
     
@@ -265,7 +265,7 @@ getDailyDataFromWeatherResp <- function(weatherContent){
 getAirportLocation <- function(code){
     #given an airport code, first find location, then get lat/log
     place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", paste(code, "Airport", sep="+"), "&key=", googleKey) 
-    debug.print(paste("getting airport id, first try", place.url))
+    print(paste("getting airport id, first try", place.url))
     
     place.json  <- place.url %>%
         GET() %>%
@@ -275,16 +275,16 @@ getAirportLocation <- function(code){
     place.placeId <- place.json$predictions$place_id[1]
     
     if(is.null(place.placeId)){
-        debug.print("place id not found")
+        print("place id not found")
     }else{
-        debug.print(paste("PLACE ID FOUND:", place.placeId))
+        print(paste("PLACE ID FOUND:", place.placeId))
     }
     
     
     #use details api to get lat/log
     
     place.detailsUrl <- paste0("https://maps.googleapis.com/maps/api/place/details/json?placeid=",place.placeId,"&key=", googleKey)
-    debug.print(paste("getting place details for ", code,place.detailsUrl))
+    print(paste("getting place details for ", code,place.detailsUrl))
     place.detailsJSON <- place.detailsUrl %>% 
         GET() %>%
         content(as="text") %>%
@@ -338,17 +338,17 @@ getWeatherResponseForCourseDate <- function(dateStr, course){
     filename <- gsub(" ", "", filename)
     
     if(file.exists(filename)){
-        debug.print(paste("getting", filename, "locally"))
+        print(paste("getting", filename, "locally"))
         weatherContent <- read_file(filename)
     }else{
         #no weather locally, grab file and save it
         
         wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/", addr, ".json", sep = "")
         wugUrl <- gsub(" ", "", wugUrl)
-        debug.print(paste("getting weather info ", wugUrl))
+        print(paste("getting weather info ", wugUrl))
         weatherReq <- GET(wugUrl)
         weatherContent <- content(weatherReq, as="text")
-        debug.print(paste("saving weather to file", filename))
+        print(paste("saving weather to file", filename))
         write_file(weatherContent, filename)
     }
     
