@@ -25,7 +25,7 @@ getLocationForPGACourse <- function(course){
     maps.json <- jsonlite::fromJSON(getUrlResponse(maps.url))
     
     if(length(maps.json$results) == 0){
-        debug.print(paste("No location for place", course))
+        #print(paste("No location for place", course))
         maps.latlong <- c(NA, NA)
     }else{
         maps.latlong <- maps.json$results$geometry$location[1,]

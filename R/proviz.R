@@ -6,6 +6,7 @@
 #' @return string of file in /data/proviz directory for the corresponding file name.
 #' @export
 #' @examples
+#' @import RecordLinkage
 #' getProvizFileForCourse("TPC Scottsdale")
 
 
@@ -54,7 +55,7 @@ getCleanProvizForCourse <- function(courseName){
         course.points$course_id
         #re-arrange cols
         frontNames <- c("course", "link")
-        course.points <- course.points[, c(frontNames, colnames(holeData)[!colnames(holeData) %in% frontNames])]
+        course.points <- course.points[, c(frontNames, colnames(course.points)[!colnames(course.points) %in% frontNames])]
         return(course.points)
     } else{
         print(paste("na course id, skipping", courseName))

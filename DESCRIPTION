@@ -8,15 +8,14 @@ Maintainer: Conrad De Peuter <conrad.depeuter@gmail.com>
 Description: This package provides utilties to match weather data and shot data
 License: GPL-2
 Imports:
-    tidyverse,
+    dplyr,
     jsonlite,
     httr,
-    RecordLinkage,
+    chron,
     geosphere,
     shiny,
     stringdist,
     testthat,
-    readr, 
-    chron
+    readr
 RoxygenNote: 5.0.1
 Suggests: 

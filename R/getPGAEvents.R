@@ -9,7 +9,8 @@
 #' @return Data Frame of events for the given year range.
 #' @export
 #' @examples getEventsForYears(2010, 2015)
-#' 
+#' @import httr
+#' @import dplyr
 #' 
 
 

@@ -34,31 +34,48 @@ scrapeWeatherForTournaments <- function(events){
 
 
 tournamentWeatherSummary <- function(event){
-    dates <- seq.Date(as.Date(event[["start"]])-3, as.Date(event[["end"]]), by="day")
+    obs <- getWeatherObsForTournament(event)
     retinfo <- data.frame(event[["course.1"]])
-    whichDate <- -3
-    print(length(dates))
-    for(i in  1:length(dates)){
-        
-        date <- dates[i]
-        print(date)
-        resp <- getWeatherResponseForCourseDate(date, event)
-        resp.json <- jsonlite::fromJSON(resp)
-        statsIWant <- c("precipi", "maxwspdi", "minwspdi" ,"meanwindspdi", "meanwdird")
-        statsRName <- c("precip_inches_day_", "max_wind_mph_day_", "min_wind_mph_day_", "mean_wind_mph_day_", "mean_wind_dir_degrees_day_")
-        statsRName <- paste0(statsRName, as.character(whichDate))
-        relevantInfo <- resp.json$history$dailysummary[statsIWant]
-        colnames(relevantInfo) <- statsRName
-        retinfo <- cbind(retinfo, data.frame(relevantInfo, check.names = FALSE))
-        retinfo$start_date <- as.Date(event[["start"]])
-        whichDate <- whichDate + 1 
-        if(whichDate == 0){
-            whichDate <- whichDate + 1
-        }
-        
-    }
+    obs$date <- as.Date(obs$date, format="%Y%m%d")
     
-    return(retinfo)
+    
+    
+    weather_sum <- obs %>% group_by(date) %>% dplyr::summarise(mean_temp = mean(tempF, na.rm=TRUE), precip = sum(precip, na.rm=TRUE), mean_wind = mean(windSpeed, na.rm=TRUE), max_wind = max(windSpeed, na.rm=TRUE), max_gust = max(windGust, na.rm=TRUE), wind_direction_variance = circ.disp(windDirDeg * pi/180)[["var"]])
+    #print(weather_sum$date)
+    print(event[["start"]])
+    weather_sum$tourn_day <- weather_sum$date - as.Date(event[["start"]])
+    
+    melted <- melt(weather_sum ,id.vars=c("tourn_day"))
+    melted$col <- paste("day", as.character(melted$tourn_day),as.character(melted$variable), sep="_")
+    
+    transposed <- as.data.frame(t(melted[,"value"]))
+    colnames(transposed) <- t(melted[,"col"])
+    transposed$course <- event[["course.1"]]
+    transposed$event <- event[["tourn"]]
+    return(transposed)
+}
+
+
+tournamentWeatherSummaries <- function(evnts){
+    sums <- apply(evnts, 1, tournamentWeatherSummary)
+    binded <- do.call("rbind.fill", sums)
+    
+    #convert dates back, yeah this is a hack
+    binded$`day_-3_date` <- as.Date(binded$`day_-3_date`, origin="1970-01-01")
+    binded$`day_-2_date` <- as.Date(binded$`day_-2_date`, origin="1970-01-01")
+    binded$`day_-1_date` <- as.Date(binded$`day_-1_date`, origin="1970-01-01")
+    binded$`day_0_date` <- as.Date(binded$`day_0_date`, origin="1970-01-01")
+    binded$`day_1_date` <- as.Date(binded$`day_1_date`, origin="1970-01-01")
+    binded$`day_2_date` <- as.Date(binded$`day_2_date`, origin="1970-01-01")
+    binded$`day_3_date` <- as.Date(binded$`day_3_date`, origin="1970-01-01")
+    
+    # move columns to front
+    col_idx <- grep("course", names(binded))
+    binded <- binded[, c(col_idx, (1:ncol(binded))[-col_idx])]
+    col_idx <- grep("event", names(binded))
+    binded <- binded[, c(col_idx, (1:ncol(binded))[-col_idx])]
+    
+    return(binded)
 }
 
 #' Get a summary of weather for an event
@@ -326,7 +343,7 @@ getWeatherResponseForCourseDate <- function(dateStr, course){
     # weatherUnderground maxes API calls at 10 per minute
     
     #get weather and addr for filename
-    wugKey <-"8569324e20ad844f"
+    wugKey <-"61b573b303c14284"
     wugDateStr <- getWugDateFormat(dateStr)
     addr <- paste(course[["hole_lat"]], course[["hole_lon"]], sep=",") 
     
@@ -355,6 +372,121 @@ getWeatherResponseForCourseDate <- function(dateStr, course){
     
     return(weatherContent)
 }
+
+dedupe_precip <- function(precip, isMetar){
+    
+    # precip measurements is calculated in amount since last METAR,  but we have SPECI measurments as well
+    # so this function removes the amount already accounted for from last METAR from current measurement
+    
+    if(is.na(precip) | precip < -999){
+        # null value dont bother
+        return(precip)   
+    }
+    
+    # remove sum since last metar
+    changed_val <- precip - sum_so_far 
+    
+    if(!isMetar){
+        # not a metar reading, subtract what weve taken
+        # editing global variable
+        sum_so_far <<- sum_so_far + changed_val
+    }else{
+        # editing global variable
+        sum_so_far <<- 0
+    }
+    return(changed_val)
+}
+
+
+
+
+getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
+    
+    # for mark is whether to convert 99's to NAS
+    
+    
+    #from a json response get the observations
+    
+    weatherJSON <- jsonlite::fromJSON(weatherContent)
+    observations <- weatherJSON$history$observations
+
+    
+    #remove nested dataframe and add info in separate columns
+    hr <- observations$date$hour
+    observations$hour <- hr
+    min  <- observations$date$min
+    time <- as.integer(paste(hr, min, sep=""))
+    time <- unlist(lapply(time, fixTime))
+    tz <- observations$date$tzname[[1]]
+    
+    year <- observations$date$year
+    month <- observations$date$mon
+    day <- observations$date$mday
+    date <- paste(year, month, day, sep="")
+    
+    if(weatherJSON$history$date$tzname !="America/New_York"){
+        print(paste("TIMEZONE NOT STANDARD", tz))
+    }
+    
+    date_time <- as.POSIXct(paste(date, time), format = "%Y%m%d %H:%M", tz = tz)
+    
+    observations$date <- date
+    observations$time <- time
+    observations$date_time <- date_time
+   
+
+    
+    #drop utc nested dataframe, other column which is probably meter name, 
+    observations <- observations[, !(colnames(observations) %in% c("utcdate" ))]
+    
+    dataWeWant <- c("tempi", "hum", "wdird","wdire", "wgusti", "wspdi","precipi","rain", "conds", "time", "date", "date_time", "hour", "metar")
+    observations <- observations[,dataWeWant]
+    colnames(observations) <- c("tempF", "humidity", "windDirDeg","windDirOrd", "windGust","windSpeed" ,"precip","rain", "conds", "weatherTime", "date", "date_time", "hour", "metar")
+    
+   
+    
+    observations$tempF <- as.numeric(observations$tempF)
+    observations$windDirDeg <- as.numeric(observations$windDirDeg)
+    observations$windSpeed <- as.numeric(observations$windSpeed)
+    observations$precip <- as.numeric(observations$precip)
+    observations$metar <- strtrim(observations$metar, 11)
+    
+    # de dupe precip values
+    is_metar <- grepl("METAR", observations$metar)
+    
+    # need this global var in dedupe_precip
+    sum_so_far <<- 0
+    observations$precip <- unlist(mapply(dedupe_precip, observations$precip, is_metar))
+    
+    if(!for_mark){
+        # keep -9999 values. need to adjust the mean calculations in this case
+        observations$precip <- unlist(lapply(observations$precip, fix99))
+        observations$windGust <- unlist(lapply(observations$windGust, fix99))
+        observations$windSpeed <- unlist(lapply(observations$windSpeed, fix99))
+        
+    }
+    
+    # make precip since last ob, not always hourly
+    prev_date_time <- c(observations$date_time[1] - 3600, observations$date_time[1:length(observations$date_time)-1])
+    observations$time_since_prev_ob <- observations$date_time - prev_date_time
+    
+    #observations$precip <- fixPrecip(observations$preci)
+    
+    return(observations)
+}
+
+
+
+
+getWeatherObsForTournament <- function(tournament, for_mark = FALSE){
+    dates <- seq.Date(as.Date(tournament[["start"]])-3, as.Date(tournament[["end"]]), by="day")
+    responses <- lapply(dates, getWeatherResponseForCourseDate, tournament)
+    obs_list <- lapply(responses, getObsFromWeatherResp, for_mark)
+    observation_frame <- do.call("rbind", obs_list)
+    return(observation_frame)
+}
+
+
 
 
 
