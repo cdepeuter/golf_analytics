@@ -42,8 +42,53 @@ getShotlinkExtTable <- function(filename, timezone = NULL){
     tb$hour <- hours(date_time)-4
     tb$date_time <- date_time
     
+    # convert all measurments to yards
+    tb$shot_dis..yards. <- tb$shot_dis..inch. / 36
+    tb$dis_hole_start..yards. <- tb$dis_hole_start..inch. / 36
+    tb$dis_hole_end..yards. <- tb$dis_hole_end..inch. / 36
+    
+    tb$end_x_yards <- tb$end_x..feet. / 3
+    tb$end_y_yards <- tb$end_y..feet. / 3
+    tb$end_z_yards <- tb$end_z..feet. / 3
+    
+    # i think these columns are in feet but need to verify
+    tb$start_x_yards <- tb$start_x / 3
+    tb$start_y_yards <- tb$start_y / 3
+    tb$start_z_yards <- tb$start_z / 3
+    tb$tee_x_yards <- tb$tee_x / 3
+    tb$tee_y_yards <- tb$tee_y / 3
+    tb$tee_z_yards <- tb$tee_z / 3
+    tb$med_x_yards <- tb$med_x / 3
+    tb$med_y_yards <- tb$med_y / 3
+    tb$med_z_yards <- tb$med_z / 3
+    tb$hole_x_yards <- tb$hole_x / 3
+    tb$hole_y_yards <- tb$hole_y / 3
+    tb$hole_z_yards <- tb$hole_z / 3
+    
+    # shot and aim degrees
     tb$shot_degrees <-  unlist(apply(tb, 1, getShotDegrees))
     tb$aim_degrees <- unlist(apply(tb, 1, getAimDegrees))
     
+    
+    print(colnames(tb))
+    # only grab yard distance columns + everything else
+    columns_to_take <- c("season", "course", "perm_tourn", "hole", "par", "shot_num", "num_strokes", "player", "round","course_name", "tourn_name","player_first", 
+                         "player_last" ,"sg.baseline.pga", "hole_score", "seq_tourn", "time", "shot_type", "loc_start", "loc_start_detail", "loc_end", 
+                         "loc_end_detail", "in_hole", "recov.pga", "act_year", "act_month", "act_day", "next_drop", "start_baseline_gm", "end_baseline_gm", 
+                         "sg_gm", "hour", "date_time", "shot_degrees", "aim_degrees", "shot_dis..yards.", "dis_hole_start..yards.", "dis_hole_end..yards.", 
+                         "end_x_yards", "end_y_yards", "end_z_yards", "start_x_yards", "start_y_yards", "start_z_yards", "tee_x_yards", "tee_y_yards", "tee_z_yards", 
+                         "med_x_yards", "med_y_yards", "med_z_yards", "hole_x_yards", "hole_y_yards", "hole_z_yards")
+    
+    
+    tb <- tb[, columns_to_take]
+    
+    
+    
     return(tb)
+}
+
+
+
+getDistance <- function(x_start, x_end, y_start, y_end){
+    return(sqrt((x_start - x_end)**2 + (y_start - y_end)**2))
 }

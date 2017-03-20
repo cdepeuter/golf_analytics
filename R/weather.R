@@ -487,6 +487,17 @@ getWeatherObsForTournament <- function(tournament, for_mark = FALSE){
 }
 
 
+getHourlyWeather <- function(obs){
+    obs$date <- as.Date(obs$date_time)
+    precip_by_hr <- obs %>% group_by(hour, date) %>% summarise(rain = sum(precip), mean_wind = mean(windSpeed))
+    dtstr <- paste0(precip_by_hr$date, " ", precip_by_hr$hour, ":00")
+    #print(dtstr)
+    precip_by_hr$datetime <-  as.POSIXct(dtstr, format = "%Y-%m-%d %H:%M")
+    #print(precip_by_hr$datetime)
+    precip_by_hr <- precip_by_hr[order(precip_by_hr$date),]
+    return(precip_by_hr)
+}
+
 
 
 

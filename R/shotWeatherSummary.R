@@ -1,3 +1,16 @@
+#' shotWeatherSummary
+#'
+#' This function returns a data frame row of summary weather information for a shit
+#' @param date_time shot_date_time input first year of events to return, Defaults to 0 (no lower bound)
+#' @param data.frame weather last year of events to return, Defaults to 10000 (no upper bound)
+#' @param boolean for_mark format data for mark or no
+#' @keywords pga golf
+#' @return Data Frame row of summary weather info for the shot
+#' @export
+#' @examples shotWeatherSummary(safeway.shots[1,], safeway.weather)
+#' @import httr
+#' @import dplyr
+#' 
 
 shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
     # precip x hrs before shot
@@ -70,6 +83,23 @@ shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
 }
 
 
+format_for_mark <- function(shot_weather){
+    # use this to add identification columns to files before giving to mark
+    
+    # replace nas
+    shot_weather[is.na(shot_weather)] <- -9999
+    
+    shot_cols <- c("season", "course", "perm_tourn", "round" ,"hole", "shot_num", "player", "shot_degrees", "aim_degrees", "wind_shot_angle_diff",
+                   "mins_since_obs", "last_wind_speed", "last_wind_gust","last_wind_dir_degrees", "last_wind_dir", "mean_wind_2hrs_before", "rain_1_hrs_before",
+                   "rain_2_hrs_before","rain_4_hrs_before", "rain_6_hrs_before", "rain_12_hrs_before", "rain_18_hrs_before", "rain_24_hrs_before", 
+                   "rain_36_hrs_before", "rain_48_hrs_before")
+    
+    
+    shot_weather <- shot_weather[,shot_cols]
+    return(shot_weather)
+}
+
+
 
 
 
@@ -78,5 +108,9 @@ shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
 matchWeatherToShots <- function(shots, weather){
     weatherInfo <- do.call("rbind.data.frame", lapply(shots$date_time, shotWeatherSummary, weather))
     
+    weatherInfo$wind_shot_angle_diff <- getWindShotDiff(cbind(shots, weatherInfo))
+    
+    # put it all together
+    weatherInfo <- cbind(shots, weatherInfo)
     return(weatherInfo)
 }

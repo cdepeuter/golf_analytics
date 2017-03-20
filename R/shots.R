@@ -13,50 +13,25 @@ getLocalTZ <- function(event){
     return(resp$timeZoneId)
 }
 
-getHourlyWeather <- function(obs){
-    precip_by_hr <- obs %>% group_by(hour, date) %>% summarise(rain = sum(precip), mean_wind = mean(windSpeed))
-    precip_by_hr$datetime <-  as.POSIXct(paste0(precip_by_hr$date, " ", precip_by_hr$hour, ":00"), format = "%Y%m%d %H:%M")
-    precip_by_hr <- precip_by_hr[order(precip_by_hr$date),]
-    return(precip_by_hr)
-}
 
 
-plotRainAndDrives <- function(shots, obs, plotTitle = ""){
-    precip_by_hr <- getHourlyWeather(obs)
+getHourlyDriveDist <- function(shots){
+    shots$date <- as.Date(shots$date_time)
     
     drives <- shots[shots$shot_num == 1 & shots$par > 3 & shots$loc_end == 4,]
-    hourly_drive_distance <- drives %>% group_by(hour, Date) %>% summarise(dist = mean(shot_dis..inch.))
-    hourly_drive_distance$datetime <-  as.POSIXct(paste0(hourly_drive_distance$Date," ", hourly_drive_distance$hour, ":00"), format = "%Y-%m-%d %H:%M")
+    hourly_drive_distance <- drives %>% group_by(hour, date) %>% summarise(dist = mean(shot_dis..yards.))
+    hourly_drive_distance$datetime <-  as.POSIXct(paste0(hourly_drive_distance$date," ", hourly_drive_distance$hour, ":00"), format = "%Y-%m-%d %H:%M")
     hourly_drive_distance$dist_norm <- hourly_drive_distance$dist / max(hourly_drive_distance$dist)
-    hourly_drive_distance <- hourly_drive_distance[order(hourly_drive_distance$Date),]
+    hourly_drive_distance <- hourly_drive_distance[order(hourly_drive_distance$date),]
     
-    plot(precip_by_hr$datetime, precip_by_hr$rain, main=paste("Rain and Drive Dist", plotTitle), xlab = "time", ylab="Precip total and drive dist", ylim = c(-.01,1) ) 
-    lines(precip_by_hr$datetime, precip_by_hr$rain)
-    points(hourly_drive_distance$datetime, hourly_drive_distance$dist_norm)
-    lines(hourly_drive_distance$datetime, hourly_drive_distance$dist_norm, col=2)
+    return(hourly_drive_distance)
 }
 
-
-
-plotWindAndDrives <- function(shots, obs, plotTitle = ""){
-    precip_by_hr <- getHourlyWeather(obs)
-    
-    drives <- shots[shots$shot_num == 1 & shots$par > 3 & shots$loc_end == 4,]
-    hourly_drive_distance <- drives %>% group_by(hour, Date) %>% summarise(dist = mean(shot_dis..inch.))
-    hourly_drive_distance$datetime <-  as.POSIXct(paste0(hourly_drive_distance$Date," ", hourly_drive_distance$hour, ":00"), format = "%Y-%m-%d %H:%M")
-    hourly_drive_distance$dist_norm <- hourly_drive_distance$dist / max(hourly_drive_distance$dist)
-    hourly_drive_distance <- hourly_drive_distance[order(hourly_drive_distance$Date),]
-    
-    plot(precip_by_hr$datetime, precip_by_hr$mean_wind / max(precip_by_hr$mean_wind), main=paste("Wind and Drive Dist", plotTitle), xlab = "time", ylab="Mean Wind and drive dist",  ylim = c(-.01, 1)) 
-    lines(precip_by_hr$datetime, precip_by_hr$mean_wind/max(precip_by_hr$mean_wind))
-    points(hourly_drive_distance$datetime, hourly_drive_distance$dist_norm)
-    lines(hourly_drive_distance$datetime, hourly_drive_distance$dist_norm, col=2)
-}
 
 getShotDegrees <- function(shot){
     
-    deltax <- as.numeric(shot[["end_x..feet."]]) - as.numeric(shot[["start_x"]])
-    deltay <- as.numeric(shot[["end_y..feet."]]) - as.numeric(shot[["start_y"]])
+    deltax <- as.numeric(shot[["end_x_yards"]]) - as.numeric(shot[["start_x_yards"]])
+    deltay <- as.numeric(shot[["end_y_yards"]]) - as.numeric(shot[["start_y_yards"]])
     
     
     return(getAngle(deltax, deltay))
@@ -64,21 +39,22 @@ getShotDegrees <- function(shot){
 
 getAimDegrees <- function(shot){
     if(shot[["shot_num"]] == 1){
-        deltax <- as.numeric(shot[["med_x"]]) - as.numeric(shot[["start_x"]])
-        deltay <- as.numeric(shot[["med_y"]]) - as.numeric(shot[["start_y"]])
+        deltax <- as.numeric(shot[["med_x_yards"]]) - as.numeric(shot[["start_x_yards"]])
+        deltay <- as.numeric(shot[["med_y_yards"]]) - as.numeric(shot[["start_y_yards"]])
     }else{
-        deltax <- as.numeric(shot[["hole_x"]]) - as.numeric(shot[["start_x"]])
-        deltay <- as.numeric(shot[["hole_y"]]) - as.numeric(shot[["start_y"]])
+        deltax <- as.numeric(shot[["hole_x_yards"]]) - as.numeric(shot[["start_x_yards"]])
+        deltay <- as.numeric(shot[["hole_y_yards"]]) - as.numeric(shot[["start_y_yards"]])
     }
     
-    
+    print(deltax)
+    print(deltay)
     return(getAngle(deltax, deltay))
 }
 
 
 getAngle <- function(delta_x, delta_y){
-    print(delta_x)
-    print(delta_y)
+    #print(delta_x)
+    #print(delta_y)
     
     
     val = 90 - atan2(delta_y, delta_x) * 180/pi
@@ -126,15 +102,34 @@ getWeatherBeforeShot <- function(shot, observations){
 }
 
 
-
-bindWeatherToShot <- function(shots, shot_weather){
-    # use this to add identification columns to files before giving to mark
+avgDistByRound <- function(shots, group_var = "player"){
+    # group by hole and grouping var
+    avg_dist <- shots %>% group_by_(.dots = list(group_var, "round")) %>% summarise(avg_dist = mean(shot_dis..yards.), wind_shot_diff = mean(wind_shot_angle_diff))
     
-    shot_cols <- c("season", "course", "perm_tourn", "round" ,"hole", "shot_num", "player", "shot_degrees", "aim_degrees")
-    shot_info <- shots[,shot_cols]
-    return(cbind(shot_info, shot_weather))
+    # combine rows for individaual group vars
+    casted <- dcast(avg_dist, paste(group_var, "~ round"), value.var = "avg_dist")
+    casted_wind <- dcast(avg_dist, paste(group_var, "~ round"), value.var = "wind_shot_diff")
+    
+    casted <- cbind(casted, casted_wind)
+    colnames(casted) <- c(group_var, "r1_dist", "r2_dist", "r3_dist", "r4_dist", group_var, "r1_wind_diff", "r2_wind_diff", "r3_wind_diff", "r4_wind_diff")
+    # if by player add the name
+    
+    if(group_var == "player"){
+        #print(casted$player)
+        casted$player_name <- id_to_name[as.character(casted$player)]
+    }
+    
+    return(casted)
 }
 
+filterShots <- function(shots_n_weather, filter_type = "drives"){
+    # right now just get drives on fairway, 
+    # TODO use ... to make this a general filtering function
+    
+    drives <- shots_n_weather[shots_n_weather$shot_num == 1 & shots_n_weather$par > 3 & shots_n_weather$loc_end == 4,]
+    
+    return(drives)
+}
 
 
 

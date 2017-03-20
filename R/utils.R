@@ -12,4 +12,19 @@ getShotId <- function(shot){
     return(gsub(" ", "", sid))
 }
 
+getPlayerIdMap <- function(shots){
+    # create a map from ID to player name
+    player_names <- unique(paste(shots$player_first, shots$player_last))
+    
+    names(player_names) <- unique(shots$player)
+    
+    return(player_names)
+}
 
+getPlayerNameMap <- function(shots){
+    player_ids <- unique(shots$player)
+    
+    names(player_ids) <- unique(paste(shots$player_first, shots$player_last))
+    
+    return(player_ids)
+}
