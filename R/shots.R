@@ -46,8 +46,8 @@ getAimDegrees <- function(shot){
         deltay <- as.numeric(shot[["hole_y_yards"]]) - as.numeric(shot[["start_y_yards"]])
     }
     
-    print(deltax)
-    print(deltay)
+    #print(deltax)
+    #print(deltay)
     return(getAngle(deltax, deltay))
 }
 
@@ -68,14 +68,6 @@ getAngle <- function(delta_x, delta_y){
 }
 
 
-
-
-fix99 <- function(data){
-    if(data == "-9999.00" | data == "-9999.0" | data == -9999.0){
-        return(NA_integer_)
-    }
-    return(data)
-}
 
 fixTime <- function(tm){
     if(nchar(tm) == 2){
@@ -122,13 +114,14 @@ avgDistByRound <- function(shots, group_var = "player"){
     return(casted)
 }
 
-filterShots <- function(shots_n_weather, filter_type = "drives"){
+filterShots <- function(shots_n_weather, filter_type = "drives", holes = seq(1,18), rounds = seq(1,5)){
     # right now just get drives on fairway, 
     # TODO use ... to make this a general filtering function
     
-    drives <- shots_n_weather[shots_n_weather$shot_num == 1 & shots_n_weather$par > 3 & shots_n_weather$loc_end == 4,]
-    
-    return(drives)
+    filtered <- shots_n_weather[shots_n_weather$shot_num == 1 & shots_n_weather$par > 3 & shots_n_weather$loc_end == 4,]
+    filtered <- filtered[filtered$hole %in% holes,]
+    filtered <- filtered[filtered$round %in% rounds,]
+    return(filtered)
 }
 
 

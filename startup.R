@@ -22,8 +22,14 @@ shriners.weather <- getWeatherObsForTournament(shriners)
 # rainy tournaments
 
 safeway <- events[261,]
-safeway.shots <- getShotlinkExtTable("shot-ext-safeway-2017.txt")
+safeway.shots <- getShotlinkExtTable("shot-ext-safeway-2017.txt", safeway$local_tz)
 safeway.weather <- getWeatherObsForTournament(safeway)
+safeway.shot_weather <- matchWeatherToShots(safeway.shots, safeway.weather)
+safeway.drives <- filterShots(safeway.shot_weather)
 
 pga_2016 <- events[253,]
 pga_2016.weather <- getWeatherObsForTournament(pga_2016)
+
+doral <- events[235,]
+doral.shots <- getShotlinkExtTable("shot-ext-doral-2016.txt", doral$local_tz)
+doral.weather <- getWeatherObsForTournament(doral)

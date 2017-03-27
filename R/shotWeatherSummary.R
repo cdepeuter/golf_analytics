@@ -19,15 +19,15 @@ shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
     
 
     weather_time_diff <- weather$date_time - shot_date_time
-    #print(typeof(weather_time_diff))
     units(weather_time_diff) <- "mins"
 
-    relevant_weather <- weather[which(weather_time_diff > - max_hrs_back * 60 & weather_time_diff <= 0),]
+    relevant_weather <- weather[which(weather_time_diff > - 6 * 60 & weather_time_diff <= 0),]
     
-   
+    
     rain_before_shot <- lapply(hours_to_look, function(x){
         return(sum(weather[which(weather_time_diff > - x * 60 & weather_time_diff <= 0), "precip"], na.rm = TRUE))
     })
+    rain_df <- data.frame(as.list(rain_before_shot))
     
     # proportionally include first observation past response
     first_obs_after <- head(weather[which( weather_time_diff > 0),], n=1)
@@ -40,45 +40,42 @@ shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
     units(time_between_obs) <- "mins"
     units(time_between_obs_shot) <- "mins"
     prop_rain_after <- first_obs_after[,"precip"] * (as.integer(time_between_obs_shot))/as.integer(time_between_obs)
+
+    
+    #print(colnames(last_obs_before))
+    #cumulative_rain_cols <-  paste0("rain_",  hours_to_look, "_hrs_before")
+    #print(cumulative_rain_cols)
+   
+    # 
+    # # weather dataframe will look different depending on if this is called individually or through matchShotsToWeather
+    # if(!all(cumulative_rain_cols %in% colnames(weather))){
+    #     rain_before_shot <- lapply(hours_to_look, function(x){
+    #         return(sum(weather[which(weather_time_diff > - x * 60 & weather_time_diff <= 0), "precip"]))
+    #     })
+    #     
+    #     rain_df <- data.frame(as.list(rain_before_shot))
+    # }else{
+    #     rain_df <- last_obs_before[, cumulative_rain_cols]
+    # }
+   
     
     # proportionally add rain after last obs
- 
-    rain_df <- data.frame(as.list(rain_before_shot))
     rain_df <- rain_df + round(prop_rain_after, 4)
     colnames(rain_df) <-  paste0("rain_",  hours_to_look, "_hrs_before")
     
- 
-    latest_weather <- weather[which(weather_time_diff > - 2 * 60 & weather_time_diff <= 0),]
-    
-    lastObs <- tail(latest_weather, n=1)
-    
-    mins_since_obs <- difftime(shot_date_time, lastObs$date_time, units = "mins")
-    last_wind_speed <- as.integer(lastObs$windSpeed)
-    last_wind_gust <- as.integer(lastObs$windGust)
-    last_wind_dir <- lastObs$windDirOrd
+    mins_since_obs <- difftime(shot_date_time, last_obs_before$date_time, units = "mins")
+    last_wind_speed <- last_obs_before$windSpeed
+    last_wind_gust <- last_obs_before$windGust
+    last_wind_dir <- last_obs_before$windDirOrd
     
     
-    last_wind_dir_degrees <- as.numeric(lastObs$windDirDeg)
+    last_wind_dir_degrees <- last_obs_before$windDirDeg
+    latest_weather_wind <- weather[which(weather_time_diff > - 2 * 60 & weather_time_diff <= 0), "windSpeed"]
+    mean_wind_2hrs_before <- mean(latest_weather_wind)
     
-    # calculate means, but remove NAS
-    if(for_mark){
-        latest_wind_speed <- latest_weather$windSpeed
-        # remove NAS
-        latest_wind_speed[latest_wind_speed > -100] <- NA_integer_
-        
-        mean_wind_2hrs_before <-  mean(latest_wind_speed, na.rm = TRUE)
-    }else{
-        mean_wind_2hrs_before <- mean(latest_weather$windSpeed, na.rm = TRUE)
-    }
+    weather_time <- last_obs_before$date_time
     
-    
-    weather_time <- lastObs$date_time
-    
-    
-    # shot directtion
-    # wind last obs before shot
-    
-    #
+
     return(cbind(data.frame( mins_since_obs, last_wind_speed, last_wind_gust, last_wind_dir_degrees, last_wind_dir, mean_wind_2hrs_before), rain_df))
 }
 
@@ -89,7 +86,7 @@ format_for_mark <- function(shot_weather){
     # replace nas
     shot_weather[is.na(shot_weather)] <- -9999
     
-    shot_cols <- c("season", "course", "perm_tourn", "round" ,"hole", "shot_num", "player", "shot_degrees", "aim_degrees", "wind_shot_angle_diff",
+    shot_cols <- c("season", "course", "perm_tourn", "round" ,"hole", "shot_num", "player", "shot_degrees", "target_degrees", "wind_target_angle_diff",
                    "mins_since_obs", "last_wind_speed", "last_wind_gust","last_wind_dir_degrees", "last_wind_dir", "mean_wind_2hrs_before", "rain_1_hrs_before",
                    "rain_2_hrs_before","rain_4_hrs_before", "rain_6_hrs_before", "rain_12_hrs_before", "rain_18_hrs_before", "rain_24_hrs_before", 
                    "rain_36_hrs_before", "rain_48_hrs_before")
@@ -101,14 +98,41 @@ format_for_mark <- function(shot_weather){
 
 
 
+get_cumulative_rain <- function(obs_time, weather){
+    hours_to_look <- c(1, 2, 4, 6, 12, 18, 24, 36, 48)
+    
+    weather_time_diff <- weather$date_time - obs_time
+    units(weather_time_diff) <- "mins"
+    
+    
+    rain_before_obs <- lapply(hours_to_look, function(x){
+        return(sum(weather[which(weather_time_diff > - x * 60 & weather_time_diff <= 0), "precip"], na.rm = TRUE))
+    })
+    
+    
+    rain_df <- data.frame(as.list(rain_before_obs))
+    colnames(rain_df) <-  paste0("rain_",  hours_to_look, "_hrs_before")
+    
+    return(rain_df)
+}
+
 
 
 
 
 matchWeatherToShots <- function(shots, weather){
-    weatherInfo <- do.call("rbind.data.frame", lapply(shots$date_time, shotWeatherSummary, weather))
     
-    weatherInfo$wind_shot_angle_diff <- getWindShotDiff(cbind(shots, weatherInfo))
+    #get cumulative rain and bind to weather ( so you dont need to do this for every shot)
+    # 
+    # weather.cumulative_rain <- lapply(weather$date_time, get_cumulative_rain, weather)
+    # weather.cumulative_rain.binded <- do.call("rbind", weather.cumulative_rain)
+    # weather <- cbind(weather, weather.cumulative_rain.binded)
+    
+    summaries <- lapply(shots$date_time, shotWeatherSummary, weather)
+    
+    weatherInfo <- bind_rows(summaries)
+    
+    weatherInfo$wind_target_angle_diff <- getWindShotDiff(cbind(shots, weatherInfo))
     
     # put it all together
     weatherInfo <- cbind(shots, weatherInfo)

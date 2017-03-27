@@ -409,7 +409,6 @@ getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
     
     weatherJSON <- jsonlite::fromJSON(weatherContent)
     observations <- weatherJSON$history$observations
-
     
     #remove nested dataframe and add info in separate columns
     hr <- observations$date$hour
@@ -449,6 +448,7 @@ getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
     observations$windDirDeg <- as.numeric(observations$windDirDeg)
     observations$windSpeed <- as.numeric(observations$windSpeed)
     observations$precip <- as.numeric(observations$precip)
+    
     observations$metar <- strtrim(observations$metar, 11)
     
     # de dupe precip values
@@ -458,13 +458,11 @@ getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
     sum_so_far <<- 0
     observations$precip <- unlist(mapply(dedupe_precip, observations$precip, is_metar))
     
-    if(!for_mark){
-        # keep -9999 values. need to adjust the mean calculations in this case
-        observations$precip <- unlist(lapply(observations$precip, fix99))
-        observations$windGust <- unlist(lapply(observations$windGust, fix99))
-        observations$windSpeed <- unlist(lapply(observations$windSpeed, fix99))
-        
-    }
+  
+    # turn -9999s into 0
+    observations$precip <- unlist(lapply(observations$precip, fix99))
+    observations$windGust <- unlist(lapply(observations$windGust, fix99))
+    observations$windSpeed <- unlist(lapply(observations$windSpeed, fix99))
     
     # make precip since last ob, not always hourly
     prev_date_time <- c(observations$date_time[1] - 3600, observations$date_time[1:length(observations$date_time)-1])
@@ -475,6 +473,13 @@ getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
     return(observations)
 }
 
+
+fix99 <- function(data){
+    if(is.na(data) | data == "-9999.00" | data == "-9999.0" | data == -9999.0 ){
+        return(0)
+    }
+    return(data)
+}
 
 
 

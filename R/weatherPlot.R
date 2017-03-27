@@ -40,8 +40,8 @@ plotRainAndDriveDist <- function(shots, obs, plotTitle = ""){
 
 
 getWindSpeedVsDist <- function(shots_n_weather, tourney = " "){
-    shots_n_weather$wind_shot_angle_diff <- getWindShotDiff(shots_n_weather)
-    shots_n_weather$opposing <- shots_n_weather$wind_shot_angle_diff > 120 & shots_n_weather$wind_shot_angle_diff < 240
+    shots_n_weather$wind_target_angle_diff <- getWindShotDiff(shots_n_weather)
+    shots_n_weather$opposing <- shots_n_weather$wind_target_angle_diff > 120 & shots_n_weather$wind_target_angle_diff < 240
     
     shots_n_weather <- shots_n_weather[shots_n_weather$opposing, ]
     drives <- shots_n_weather[shots_n_weather$shot_num == 1 & shots_n_weather$par > 3 & shots_n_weather$loc_end == 4,]
@@ -55,10 +55,10 @@ getWindSpeedVsDist <- function(shots_n_weather, tourney = " "){
 }
 
 windAnalysisForTourney <- function(shot_weather, tourney=""){
-    shot_weather$wind_shot_angle_diff <- getWindShotDiff(shot_weather)
+    shot_weather$wind_target_angle_diff <- getWindShotDiff(shot_weather)
     wind_vs_dist <- getWindVsDist(shot_weather)
     
-    ggplot(wind_vs_dist, aes(x=wind_shot_angle_diff)) + geom_line(aes(y=drive_dist)) + ggtitle(tourney)
+    ggplot(wind_vs_dist, aes(x=wind_target_angle_diff)) + geom_line(aes(y=drive_dist)) + ggtitle(tourney)
     
 }
 
@@ -68,10 +68,25 @@ plotDriveDistAdjustWeather <- function(player.drives){
     title <- paste(player.drives$player_first[1], player.drives$player_last[1], "drives")
    
     
-    player.drives$opp_wind <- player.drives$wind_shot_angle_diff > 90 & player.drives$wind_shot_angle_diff < 270 & player.drives$last_wind_speed > 6
+    player.drives$opp_wind <- player.drives$wind_target_angle_diff > 90 & player.drives$wind_target_angle_diff < 270 & player.drives$last_wind_speed > 6
     
-    ggplot(player.drives) + geom_point(aes(x=date_time, y=shot_dis..yards., color=opp_wind)) + ggtitle(title)
+    ggplot(player.drives) + geom_point(aes(x=date_time, y=shot_dis..yards., color=opp_wind, size=last_wind_speed)) + ggtitle(title)
 }
+
+
+
+plotDriveDistAdjustWeatherMultipleTourneys <- function(player.drives){
+    
+    title <- paste(player.drives$player_first[1], player.drives$player_last[1], "drives")
+    
+    player.drives$indx <- seq(1, nrow(player.drives))
+    
+    player.drives$opp_wind <- player.drives$wind_target_angle_diff > 90 & player.drives$wind_target_angle_diff < 270 & player.drives$last_wind_speed > 6
+    
+    ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis..yards., color=opp_wind, size=last_wind_speed)) + ggtitle(title)
+}
+
+
 
 
 

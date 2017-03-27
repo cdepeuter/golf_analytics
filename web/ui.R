@@ -5,9 +5,8 @@ shinyUI(fluidPage(
 
     sidebarLayout(
         sidebarPanel(
-            selectInput("player", "Player:", getPlayerNameMap(safeway.shot_weather), 1810)
+            selectInput("player", "Player:", getPlayerNameMap(all.drives), 1810)
         ),
-        
         
         mainPanel(
             plotOutput("driveDistPlot")

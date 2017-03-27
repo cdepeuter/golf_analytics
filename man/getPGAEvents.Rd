@@ -24,8 +24,6 @@ This function returns a data frame of events for the pga tour between specific y
 }
 \examples{
 getEventsForYears(2010, 2015)
-
-
 }
 \keyword{golf}
 \keyword{pga}

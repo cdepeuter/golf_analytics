@@ -38,13 +38,16 @@ test_that("torrey pines min",  expect_equivalent(as.numeric(tp[9, c("midpt1_z", 
 safeway <- events[261,]
 
 test_shot <-  safeway.shots[30195,]
+safeway.weather <- getWeatherObsForTournament(safeway)
 test_shot_weather <- shotWeatherSummary(test_shot[, "date_time"], safeway.weather)
 
 test_that("1 hr before", expect_equal(test_shot_weather$rain_1_hrs_before, .0924))
 test_that("2 hrs before", expect_equal(test_shot_weather$rain_2_hrs_before,  0.1024))
 test_that("48 hrs before", expect_equal(test_shot_weather$rain_48_hrs_before,  0.4624))
+test_that("mean wind", expect_equal(test_shot_weather$mean_wind_2hrs_before, 2.88333, tolerance = .00001))
 
 
+id_to_name <- getPlayerIdMap(safeway.shots)
 # shot angles
 
 test_that("safeway first quad", expect_equal(getAimDegrees(safeway.shots[1,]), 15.65421,  tolerance = .00001))
@@ -54,11 +57,12 @@ test_that("safeway third quad", expect_equal(getAimDegrees(safeway.shots[20,]), 
 
 
 # filtering shots
-safeway.drives <- filter_shots(safeway.shot_weather)
+safeway.drives <- filterShots(safeway.shot_weather)
 test_that("safeway mean drive dist", expect_equal(mean(safeway.drives$shot_dis..yards.), 275.5497, tolerance = .00001))
 
 
 # player and hole groupings by round working
+
 safeway.drives.by_player <- avgDistByRound(safeway.drives, "player")
 safeway.drives.by_hole <- avgDistByRound(safeway.drives, "hole")
 

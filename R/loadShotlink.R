@@ -1,3 +1,15 @@
+#' Get Shotlink tables
+#'
+#' These functions load a table from the correct directory
+#' @param dataframe evnts
+#' @keywords pga golf
+#' @return Data Frame of shots
+#' @export
+#' @import chron
+#' @import readr
+#' @examples getShotlinkExtTable("shot-ext-safeway-2017.txt", safeway$local_tz)
+#' 
+#' 
 
 getShotlinkTable <- function(filename){
     tb <- read.csv(paste0("./data/shotlink/", filename),  sep=";", header=TRUE, stringsAsFactors = FALSE)
@@ -67,7 +79,7 @@ getShotlinkExtTable <- function(filename, timezone = NULL){
     
     # shot and aim degrees
     tb$shot_degrees <-  unlist(apply(tb, 1, getShotDegrees))
-    tb$aim_degrees <- unlist(apply(tb, 1, getAimDegrees))
+    tb$target_degrees <- unlist(apply(tb, 1, getAimDegrees))
     
     
     print(colnames(tb))
@@ -75,7 +87,7 @@ getShotlinkExtTable <- function(filename, timezone = NULL){
     columns_to_take <- c("season", "course", "perm_tourn", "hole", "par", "shot_num", "num_strokes", "player", "round","course_name", "tourn_name","player_first", 
                          "player_last" ,"sg.baseline.pga", "hole_score", "seq_tourn", "time", "shot_type", "loc_start", "loc_start_detail", "loc_end", 
                          "loc_end_detail", "in_hole", "recov.pga", "act_year", "act_month", "act_day", "next_drop", "start_baseline_gm", "end_baseline_gm", 
-                         "sg_gm", "hour", "date_time", "shot_degrees", "aim_degrees", "shot_dis..yards.", "dis_hole_start..yards.", "dis_hole_end..yards.", 
+                         "sg_gm", "hour", "date_time", "shot_degrees", "target_degrees", "shot_dis..yards.", "dis_hole_start..yards.", "dis_hole_end..yards.", 
                          "end_x_yards", "end_y_yards", "end_z_yards", "start_x_yards", "start_y_yards", "start_z_yards", "tee_x_yards", "tee_y_yards", "tee_z_yards", 
                          "med_x_yards", "med_y_yards", "med_z_yards", "hole_x_yards", "hole_y_yards", "hole_z_yards")
     
