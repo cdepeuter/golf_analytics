@@ -77,14 +77,27 @@ plotDriveDistAdjustWeather <- function(player.drives){
 
 plotDriveDistAdjustWeatherMultipleTourneys <- function(player.drives){
     
+    title <- paste(player.drives$player_first[1], player.drives$player_last[1], "drives, wind and rain adjusted")
+    
+    player.drives$indx <- seq(1, nrow(player.drives))
+    
+    player.drives$opp_wind <- player.drives$net_wind < 0
+    
+    ggplot(player.drives) + geom_point(aes(x=indx, y=adjusted_dist, color=opp_wind)) + ggtitle(title)
+}
+
+
+plotDriveDistMultipleTourneys <- function(player.drives){
+    
     title <- paste(player.drives$player_first[1], player.drives$player_last[1], "drives")
     
     player.drives$indx <- seq(1, nrow(player.drives))
     
-    player.drives$opp_wind <- player.drives$wind_target_angle_diff > 90 & player.drives$wind_target_angle_diff < 270 & player.drives$last_wind_speed > 6
+    player.drives$opp_wind <- player.drives$net_wind < 0
     
     ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis..yards., color=opp_wind, size=last_wind_speed)) + ggtitle(title)
 }
+
 
 
 

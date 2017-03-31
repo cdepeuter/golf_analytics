@@ -16,7 +16,4 @@ string of file in /data/proviz directory for the corresponding file name.
 This function finds the corresponding proviz course file in the data/proviz/ directory
 There is a text file, exceptions.txt which manually corrects some errors
 }
-\examples{
-getProvizFileForCourse("TPC Scottsdale")
-}
 

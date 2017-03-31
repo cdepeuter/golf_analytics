@@ -1,4 +1,18 @@
 
+#print("getting package from github")
+#install_github("cdepeuter/golf_analytics")
+#library(golfAnalysis)
+
+
+#tourn_id <- as.integer(args[6])
+#season <- as.integer(args[7])
+#print(tourn_id)
+#print(season)
+
+events <- getPGAEvents()
+events <- getLocationForEvents(events)
+
+
 season <- 2016
 
 # get relevant files
@@ -10,7 +24,7 @@ print(relevant.files)
 
 # get relevant events
 relevant.events <- events[events$season == season, ]
-#relevant.events <- events[237:239,]
+#relevant.events <- events[238:260,]
 
 
 print(length(relevant.events))
@@ -19,7 +33,7 @@ if(length(relevant.files) != length(relevant.events)){
     warning("files and events dont match")
 }
 
-shot_weathers_2016 <- by(relevant.events, 1:nrow(relevant.events), function(event){
+shot_weathers_2016.2 <- by(relevant.events, 1:nrow(relevant.events), function(event){
 
     print(event)
     #print(paste(typeof(event[["local_tz"]]), typeof(event[["tourn"]]), typeof(event[["perm_tourn"]])))
@@ -45,11 +59,11 @@ shot_weathers_2016 <- by(relevant.events, 1:nrow(relevant.events), function(even
         print("matching shots and weather")
         # match shots and weather
         start.time  <- Sys.time()
-        
+
         this_tourney.shot_weather <- matchWeatherToShots(this_tourney.shots, this_tourney.weather)
         end.time <- Sys.time()
-        
-        
+
+
         print(paste("time taken", as.character(end.time - start.time)))
         # get tournament summary
         
@@ -60,8 +74,8 @@ shot_weathers_2016 <- by(relevant.events, 1:nrow(relevant.events), function(even
 
 
 # make sure you're taking just the data frames
-take_by <- lapply(shot_weathers_2016, typeof) == "list"
+take_by <- lapply(shot_weathers_2016.2, typeof) == "list"
 
 # bind together
-all.shot.weather.2016 <- do.call("rbind", shot_weathers_2016[take_by])
+all.shot.weather.2016.2 <- do.call("rbind", shot_weathers_2016.2[take_by])
 

@@ -62,7 +62,7 @@ test_that("safeway mean drive dist", expect_equal(mean(safeway.drives$shot_dis..
 
 
 # player and hole groupings by round working
-
+id_to_name
 safeway.drives.by_player <- avgDistByRound(safeway.drives, "player")
 safeway.drives.by_hole <- avgDistByRound(safeway.drives, "hole")
 

@@ -5,9 +5,8 @@
 #' @param string input name of course
 #' @return string of file in /data/proviz directory for the corresponding file name.
 #' @export
-#' @examples
+#' @examples 
 #' @import RecordLinkage
-#' getProvizFileForCourse("TPC Scottsdale")
 
 
 getCourseForProvizFile <- function(file){
@@ -73,7 +72,6 @@ getCleanProvizForCourse <- function(courseName){
 #' @return string of file in /data/proviz directory for the corresponding file name.
 #' @export
 #' @examples
-#' getProvizFileForCourse("TPC Scottsdale")
 
 
 getProvizFileForCourse <- function(course){

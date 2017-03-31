@@ -3,26 +3,26 @@ args <- commandArgs()
 setwd("~/code/golfAnalysis")
 #library(golfAnalysis, lib.loc=file.path("~/code/golfAnalysis"))
 
-#library(devtools)
+library(devtools)
 #print("getting package from github")
-#install_github("cdepeuter/golf_analytics")
-#library(golfAnalysis)
+install_github("cdepeuter/golf_analytics")
+library(golfAnalysis)
 
 
 # TODO hack remove
-
-library(chron)
-library(dplyr)
-library(httr)
-library(readr)
-
-source("./R/getPGAEvents.R")
-source("./R/shots.R")
-source("./R/weather.R")
-source("./R/getLocationForEvents.R")
-source("./R/getLocationForPGACourse.R")
-source("./R/getUrlResponse.R")
-
+# 
+# library(chron)
+# library(dplyr)
+# library(httr)
+# library(readr)
+# 
+# source("./R/getPGAEvents.R")
+# source("./R/shots.R")
+# source("./R/weather.R")
+# source("./R/getLocationForEvents.R")
+# source("./R/getLocationForPGACourse.R")
+# source("./R/getUrlResponse.R")
+# 
 
 tourn_id <- as.integer(args[6])
 season <- as.integer(args[7])

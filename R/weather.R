@@ -12,6 +12,7 @@ scrapeWeatherForTournament <- function(e){
     dates <- seq.Date(as.Date(e[["start"]])-5, as.Date(e[["end"]]), by="day")
     
     t <- lapply(dates, getWeatherResponseForCourseDate, e)
+    return()
 }
 
 
@@ -30,6 +31,7 @@ scrapeWeatherForTournaments <- function(events){
         scrapeWeatherForTournament(event)
         Sys.sleep(60)
     })
+    return()
 }
 
 
@@ -456,6 +458,7 @@ getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
     
     # need this global var in dedupe_precip
     sum_so_far <<- 0
+    
     observations$precip <- unlist(mapply(dedupe_precip, observations$precip, is_metar))
     
   

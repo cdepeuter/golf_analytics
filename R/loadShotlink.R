@@ -7,6 +7,7 @@
 #' @export
 #' @import chron
 #' @import readr
+#' @import reshape2
 #' @examples getShotlinkExtTable("shot-ext-safeway-2017.txt", safeway$local_tz)
 #' 
 #' 

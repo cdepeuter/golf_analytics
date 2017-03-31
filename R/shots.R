@@ -96,7 +96,7 @@ getWeatherBeforeShot <- function(shot, observations){
 
 avgDistByRound <- function(shots, group_var = "player"){
     # group by hole and grouping var
-    avg_dist <- shots %>% group_by_(.dots = list(group_var, "round")) %>% summarise(avg_dist = mean(shot_dis..yards.), wind_shot_diff = mean(wind_shot_angle_diff))
+    avg_dist <- shots %>% group_by_(.dots = list(group_var, "round")) %>% summarise(avg_dist = mean(shot_dis..yards.), wind_shot_diff = mean(wind_target_angle_diff))
     
     # combine rows for individaual group vars
     casted <- dcast(avg_dist, paste(group_var, "~ round"), value.var = "avg_dist")
@@ -125,4 +125,43 @@ filterShots <- function(shots_n_weather, filter_type = "drives", holes = seq(1,1
 }
 
 
+loadAndBindShotsForEvents <- function(events){
+    shotlink.directory <- "./data/shotlink"
+    allFiles <- list.files(shotlink.directory)
+    
+    by_shots_each <- by(events, 1:nrow(events), function(event){
+        
+        print(event)
+        #print(paste(typeof(event[["local_tz"]]), typeof(event[["tourn"]]), typeof(event[["perm_tourn"]])))
+        
+        this_tourney.pattern <-  paste0("^shot-ext-([a-z]*)-", event[["season"]], "-", event[["course"]], ".txt$")
+        print(this_tourney.pattern)
+        this_tourney.file <- allFiles[which(grepl(this_tourney.pattern, allFiles))]
+        
+        
+        this_tourney.file_path <- paste0(shotlink.directory, "/" , this_tourney.file)
+        print(paste("tournament file", this_tourney.file_path))
+        
+        if(!file.exists(this_tourney.file_path) | this_tourney.file_path == "./data/shotlink/"){
+            print(paste("NOO FILLEE", event))
+        } else{
+            # get this tournament shots
+
+            this_tourney.shots <- getShotlinkExtTable(this_tourney.file, event[["local_tz"]])
+          
+            
+            # format for mark
+            return(this_tourney.shots)
+        }
+    })
+    
+    
+    # make sure you're taking just the data frames
+    take_by <- lapply(by_shots_each, typeof) == "list"
+    
+    # bind together
+    all.shots <- do.call("rbind", by_shots_each[take_by])
+    
+    return(all.shots)
+}
 

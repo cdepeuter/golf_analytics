@@ -4,6 +4,7 @@
 #' @param string list of points
 #' @return vector of elevations in feet
 #' @export
+#' @import dplyr
 #' @examples
 #' getElevationAtPoints("40.743484674348,-73.454984245498|40.744527774453,-73.454463145446|40.74670037467,-73.453455145346")
 

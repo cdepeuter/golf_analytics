@@ -12,6 +12,10 @@ function(input, output) {
     #print(player_id)
  
     output$driveDistPlot <- renderPlot({
+        plotDriveDistMultipleTourneys(drive_data())
+    })
+    
+    output$adjustedDriveDistPlot <- renderPlot({
         plotDriveDistAdjustWeatherMultipleTourneys(drive_data())
     })
 

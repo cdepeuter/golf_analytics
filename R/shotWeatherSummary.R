@@ -15,7 +15,7 @@
 shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
     # precip x hrs before shot
     max_hrs_back <- 48
-    hours_to_look <- c(1, 2, 4, 6, 12, 18, 24, 36, 48)
+    hours_to_look <- c(1, 2, 4, 6, 8, 12, 18, 24, 36, 48)
     
 
     weather_time_diff <- weather$date_time - shot_date_time
@@ -87,10 +87,10 @@ format_for_mark <- function(shot_weather){
     shot_weather[is.na(shot_weather)] <- -9999
     
     shot_cols <- c("season", "course", "perm_tourn", "round" ,"hole", "shot_num", "player", "shot_degrees", "target_degrees", "wind_target_angle_diff",
-                   "mins_since_obs", "last_wind_speed", "last_wind_gust","last_wind_dir_degrees", "last_wind_dir", "mean_wind_2hrs_before", "rain_1_hrs_before",
-                   "rain_2_hrs_before","rain_4_hrs_before", "rain_6_hrs_before", "rain_12_hrs_before", "rain_18_hrs_before", "rain_24_hrs_before", 
-                   "rain_36_hrs_before", "rain_48_hrs_before")
-    
+                   "mins_since_obs", "last_wind_speed", "last_wind_gust","last_wind_dir_degrees", "last_wind_dir", "mean_wind_2hrs_before", 
+                   "rain_0_to_1_hrs_before" ,  "rain_1_to_2_hrs_before" ,  "rain_2_to_4_hrs_before" ,  "rain_4_to_6_hrs_before" , 
+                    "rain_6_to_8_hrs_before"  , "rain_8_to_12_hrs_before",  "rain_12_to_18_hrs_before", "rain_18_to_24_hrs_before",
+                     "rain_24_to_36_hrs_before", "rain_36_to_48_hrs_before")
     
     shot_weather <- shot_weather[,shot_cols]
     return(shot_weather)
@@ -123,7 +123,7 @@ get_cumulative_rain <- function(obs_time, weather){
 matchWeatherToShots <- function(shots, weather){
     
     #get cumulative rain and bind to weather ( so you dont need to do this for every shot)
-    # 
+    #
     # weather.cumulative_rain <- lapply(weather$date_time, get_cumulative_rain, weather)
     # weather.cumulative_rain.binded <- do.call("rbind", weather.cumulative_rain)
     # weather <- cbind(weather, weather.cumulative_rain.binded)
@@ -134,7 +134,37 @@ matchWeatherToShots <- function(shots, weather){
     
     weatherInfo$wind_target_angle_diff <- getWindShotDiff(cbind(shots, weatherInfo))
     
+    
+    #“rain_1_hrs_before";"rain_1_to_2_hrs_before";"rain_2_to_4_hrs_before";"rain_4_to_6_hrs_before";"rain_6_to_12_hrs_before";"rain_12_to_18_hrs_before";"rain_18_to_24_hrs_before";"rain_24_to_36_hrs_before";"rain_36_to_48_hrs_before"
+    
+    # make weather non-overlapping
+    weatherInfo$rain_0_to_1_hrs_before <- weatherInfo$rain_1_hrs_before 
+    weatherInfo$rain_1_to_2_hrs_before <- weatherInfo$rain_2_hrs_before -  weatherInfo$rain_1_hrs_before
+    weatherInfo$rain_2_to_4_hrs_before <- weatherInfo$rain_4_hrs_before -  weatherInfo$rain_2_hrs_before
+    weatherInfo$rain_4_to_6_hrs_before <- weatherInfo$rain_6_hrs_before -  weatherInfo$rain_4_hrs_before
+    weatherInfo$rain_6_to_8_hrs_before <- weatherInfo$rain_8_hrs_before -  weatherInfo$rain_6_hrs_before
+    weatherInfo$rain_8_to_12_hrs_before <- weatherInfo$rain_12_hrs_before -  weatherInfo$rain_8_hrs_before
+    weatherInfo$rain_12_to_18_hrs_before <- weatherInfo$rain_18_hrs_before -  weatherInfo$rain_12_hrs_before
+    weatherInfo$rain_18_to_24_hrs_before <- weatherInfo$rain_24_hrs_before -  weatherInfo$rain_18_hrs_before
+    weatherInfo$rain_24_to_36_hrs_before <- weatherInfo$rain_36_hrs_before -  weatherInfo$rain_24_hrs_before
+    weatherInfo$rain_36_to_48_hrs_before <- weatherInfo$rain_48_hrs_before -  weatherInfo$rain_36_hrs_before
+    
+    weatherInfo$agg_48_hr_rain <- aggRain(weatherInfo)
+    old_weather_cols <- c("rain_1_hrs_before","rain_2_hrs_before","rain_4_hrs_before","rain_6_hrs_before","rain_8_hrs_before","rain_12_hrs_before",
+                          "rain_18_hrs_before","rain_24_hrs_before","rain_36_hrs_before","rain_48_hrs_before")
+    
+    
+    weatherInfo <- weatherInfo[,!colnames(weatherInfo) %in% old_weather_cols]
+    
     # put it all together
     weatherInfo <- cbind(shots, weatherInfo)
     return(weatherInfo)
+}
+
+aggRain <- function(weatherInfo){
+   agg <- weatherInfo$rain_0_to_1_hrs_before + weatherInfo$rain_1_to_2_hrs_before + weatherInfo$rain_2_to_4_hrs_before +
+        weatherInfo$rain_4_to_6_hrs_before + weatherInfo$rain_6_to_8_hrs_before + weatherInfo$rain_8_to_12_hrs_before +
+        weatherInfo$rain_12_to_18_hrs_before +  weatherInfo$rain_18_to_24_hrs_before + weatherInfo$rain_24_to_36_hrs_before + weatherInfo$rain_36_to_48_hrs_before
+
+    return(agg)
 }
