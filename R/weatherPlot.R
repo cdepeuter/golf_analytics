@@ -20,6 +20,57 @@ plotMeanWindSpeedAndDriveDist <- function(shots, obs, plotTitle = ""){
     
 }
 
+rain_distance_lines <- function(shots){
+    # too tired to do this the right way, ugly code
+    rnded_1 <- data.frame(shots %>% group_by(round(rain_0_to_1_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=1))
+    rnded_2 <- data.frame(shots %>% group_by(round(rain_1_to_2_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=2))
+    rnded_4 <- data.frame(shots %>% group_by(round(rain_2_to_4_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=4))
+    rnded_6 <- data.frame(shots %>% group_by(round(rain_4_to_6_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=6))
+    rnded_8 <- data.frame(shots %>% group_by(round(rain_6_to_8_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=8))
+    
+    rnded_12 <- data.frame(shots %>% group_by(round(rain_8_to_12_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=12))
+    rnded_18 <- data.frame(shots %>% group_by(round(rain_12_to_18_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=18))
+    rnded_24 <- data.frame(shots %>% group_by(round(rain_18_to_24_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=24))
+    rnded_36 <- data.frame(shots %>% group_by(round(rain_24_to_36_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=36))
+    rnded_48 <- data.frame(shots %>% group_by(round(rain_36_to_48_hrs_before/2,digits=1)*2) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=28))
+    colnames(rnded_1) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_2) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_4) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_6) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_8) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_12) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_18) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_24) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_36) <- c("rain", "dist_diff", "obs", "hrs")
+    colnames(rnded_48) <- c("rain", "dist_diff", "obs", "hrs")
+    
+    
+    rain_diff_by_hrs <- rbind(rnded_1, rnded_2, rnded_4, rnded_6, rnded_8, rnded_12, rnded_18, rnded_24, rnded_36, rnded_48)
+    
+    ggplot(rain_diff_by_hrs[rain_diff_by_hrs$obs > 20,]) + geom_line(aes(x=hrs, y=dist_diff, group=rain, colour=rain)) + scale_colour_gradient()
+    #return(rain_diff_by_hrs)
+}
+
+
+plot_rain_regressions <- function(shots, isolate_interval){
+    rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
+    
+    # for regression coefficients we only want to look at long holes
+    shots <- shots[shots$long_hole,]
+    
+    lapply(rain_cols, function(x){
+        
+        if(isolate_interval){
+            shots <- shots[shots[,"agg_48_hr_rain"] == shots[,x],]
+        }
+        ggplot(shots, aes_string(x=x, y="drive_dist_diff")) + geom_point()  +
+            stat_smooth(method="lm", formula = y ~ x) + stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE, position=position_jitter(width=.5))
+        
+    })
+    
+}
+
+
 
 plotRainAndDriveDist <- function(shots, obs, plotTitle = ""){
     # line plot of precipitation and drive distance
@@ -83,7 +134,7 @@ plotDriveDistAdjustWeatherMultipleTourneys <- function(player.drives){
     
     player.drives$opp_wind <- player.drives$net_wind < 0
     
-    ggplot(player.drives) + geom_point(aes(x=indx, y=adjusted_dist, color=opp_wind)) + ggtitle(title)
+    ggplot(player.drives) + geom_point(aes(x=indx, y=adjusted_dist, color=long_hole)) + ggtitle(title) + scale_y_continuous(limits=c(225, 375))
 }
 
 

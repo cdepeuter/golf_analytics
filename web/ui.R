@@ -5,7 +5,7 @@ shinyUI(fluidPage(
 
     sidebarLayout(
         sidebarPanel(
-            selectInput("player", "Player:", getPlayerNameMap(all.drives), 1810)
+            selectizeInput("player", "Player:", getPlayerNameMap(all.drives), 1810)
         ),
         
         mainPanel(

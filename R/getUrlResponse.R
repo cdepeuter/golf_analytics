@@ -4,6 +4,7 @@
 #' @param string url
 #' @return string response
 #' @export
+#' @import dplyr
 #' @examples
 #' getUrlResponse("https://www.pga.com")
 

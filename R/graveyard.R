@@ -424,3 +424,129 @@ do_metawrite <- function(events.us){
 }
 
 
+
+
+getAllWeatherForShots <- function(shots, course){
+    # for each date in the shotlink data, get the weather observations for the course and store those
+    # in memory so when running get weather for shot no API call need to be made
+    dates <- unique(shots$Date)
+    
+    weathers <- list()
+    
+    for(i in 1:length(dates)){
+        weathers[[i]] <- getWeatherResponseForCourseDate( dates[i], course)
+    }
+    
+    names(weathers) <- dates
+    
+    return(weathers)
+}
+
+
+
+getAirportLocation <- function(code){
+    #given an airport code, first find location, then get lat/log
+    place.url <- paste0("https://maps.googleapis.com/maps/api/place/autocomplete/json?input=", paste(code, "Airport", sep="+"), "&key=", googleKey) 
+    print(paste("getting airport id, first try", place.url))
+    
+    place.json  <- place.url %>%
+        GET() %>%
+        content(as="text") %>%
+        jsonlite::fromJSON()
+    
+    place.placeId <- place.json$predictions$place_id[1]
+    
+    if(is.null(place.placeId)){
+        print("place id not found")
+    }else{
+        print(paste("PLACE ID FOUND:", place.placeId))
+    }
+    
+    
+    #use details api to get lat/log
+    
+    place.detailsUrl <- paste0("https://maps.googleapis.com/maps/api/place/details/json?placeid=",place.placeId,"&key=", googleKey)
+    print(paste("getting place details for ", code,place.detailsUrl))
+    place.detailsJSON <- place.detailsUrl %>% 
+        GET() %>%
+        content(as="text") %>%
+        jsonlite::fromJSON()
+    
+    #return lat & long
+    place.latLong <- unlist(place.detailsJSON$result$geometry$location)
+    
+    #if no location do something
+    return(place.latLong)
+}
+
+
+
+#' Get a summary of weather for an event
+#'
+#' This function finds summary weather data for an individual golf event
+#' @param event from getPGAEvents() function
+#' @return Dataframe of summary information from event
+#' @export
+#' @examples
+#' getWeatherForTournament()
+
+getWeatherForTournament <- function(course){
+    
+    # get weather for 3 days before tournament
+    dates <- seq.Date(as.Date(course[["start"]])-3, as.Date(course[["end"]]), by="day")
+    
+    ret <- list()
+    ret[1] <- course[["course.1"]]
+    ret[2] <- course[["tourn"]]
+    
+    #getWeatherResponseForCourseDate
+    nDates <- length(dates)
+    
+    #hope 6 is the max number of days in tourney
+    for(i in 1:9){
+        if(i <= length(dates)){
+            date <- dates[i]
+            
+            
+            #file should save, thats what we really want
+            #but from this response check out airport code
+            wObs <- getWeatherResponseForCourseDate(date, course)
+            nObs <- dim(wObs)[1]
+            
+            ret[i+2] <- nObs
+            
+            #TODO 5 days uh oh
+        }else{
+            ret[i+2] <- NA
+        }
+    }
+    
+    #keep track of metar/airport code
+    air <- " " #substring(strsplit(wObs$metar[1], split = " ")[[1]][[2]], 2)
+    paste("airport code", air)
+    
+    ret[12] <- air
+    
+    #getAirport location
+    #airLoc <- getAirportLocation(air)
+    #airloc <- c(1,2)
+    #swap lat/long
+    #airLoc <- as.vector(c(airLoc[2], airLoc[1]))
+    #courseLoc <- as.vector(as.double(c(course[["lng"]], course[["lat"]])))
+    
+    # #get Distance convert to miles
+    # if(is.null(courseLoc) | is.null(airLoc)){
+    #     dist <- NA
+    # }else{
+    #     dist <- distVincentySphere(airLoc, courseLoc) * 0.000621371 
+    # }
+    # 
+    ret[13] <- 4
+    # 
+    # print(paste("Distance between course and measurements", dist))
+    
+    return(ret)
+}
+
+
+

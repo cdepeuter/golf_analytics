@@ -1,0 +1,24 @@
+Before running the file, run on the command line:
+
+$ pip install urllib2
+$ pip install cookielib
+
+And ensure that there were no errors in the installation (the command should say something like library installed successfully)
+
+
+
+To run script from command line:
+
+
+
+$ python login_download.py [username] [password]  [url_of_file_to_download]
+
+The script will first make a request to the login page 'https://transfer.pgatourhq.com/statsarchive' with the given username and password, 
+and it stores the cookies you get from the response. It then makes a request to the url_of_file_to_download and tries to save that.
+
+If the matlab file you are running this from is not in the same "current directory" as the python file, 
+or if you get a "[Errno 2] No such file or directory", then change to the absolute path of the file:
+
+$ python /Users/conraddepeuter/code/golfAnalysis/py/login_download.py admin secret  http://localhost:5000/secret-page.zip
+
+The script should save the file to the current directory, with a file name the same as the ending of the url given (so for the request above /secret-page.zip).
