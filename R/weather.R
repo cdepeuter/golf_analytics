@@ -384,8 +384,7 @@ getWeatherObsForTournament <- function(tournament){
 
     # distance from course to station
     course_coords <- as.double(c(tournament[["hole_lon"]], tournament[["hole_lat"]]))
-    print(course_coords)
-    print(weather_station_coords)
+    
     dist <- distVincentySphere(course_coords, as.double(weather_station_coords)) * 0.000621371 
     
     # add to frame

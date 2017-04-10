@@ -87,7 +87,7 @@ format_for_mark <- function(shot_weather){
     shot_weather[is.na(shot_weather)] <- -9999
     
     shot_cols <- c("season", "course", "perm_tourn", "round" ,"hole", "shot_num", "player", "shot_degrees", "target_degrees", "wind_target_angle_diff",
-                   "mins_since_obs", "last_wind_speed", "last_wind_gust","last_wind_dir_degrees", "last_wind_dir", "mean_wind_2hrs_before", 
+                   "mins_since_obs", "dist_from_weather_miles", "last_wind_speed", "last_wind_gust","last_wind_dir_degrees", "last_wind_dir", "mean_wind_2hrs_before", 
                    "rain_0_to_1_hrs_before" ,  "rain_1_to_2_hrs_before" ,  "rain_2_to_4_hrs_before" ,  "rain_4_to_6_hrs_before" , 
                     "rain_6_to_8_hrs_before"  , "rain_8_to_12_hrs_before",  "rain_12_to_18_hrs_before", "rain_18_to_24_hrs_before",
                      "rain_24_to_36_hrs_before", "rain_36_to_48_hrs_before")
@@ -133,7 +133,7 @@ matchWeatherToShots <- function(shots, weather){
     weatherInfo <- bind_rows(summaries)
     
     weatherInfo$wind_target_angle_diff <- getWindShotDiff(cbind(shots, weatherInfo))
-    
+    weatherInfo$dist_from_weather_miles <- weather$dist_from_weather_miles[1]
     
     #“rain_1_hrs_before";"rain_1_to_2_hrs_before";"rain_2_to_4_hrs_before";"rain_4_to_6_hrs_before";"rain_6_to_12_hrs_before";"rain_12_to_18_hrs_before";"rain_18_to_24_hrs_before";"rain_24_to_36_hrs_before";"rain_36_to_48_hrs_before"
     
