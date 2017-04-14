@@ -42,7 +42,7 @@ driveDistDeviation <- function(shots, use_just_long_holes){
     # only take shots no wind no rain
     #reg_shots <- shots[abs(shots$last_wind_speed) < 3 & shots$agg_48_hr_rain < .02 & shots$dis_hole_start..yards. > 450,]
     
-    reg_shots <- shots[abs(shots$last_wind_speed) < 3 & shots$agg_48_hr_rain == 0,]
+    reg_shots <- shots[ shots$agg_48_hr_rain == 0,]
     
     if(use_just_long_holes){
         reg_shots <- shots[shots$dis_hole_start..yards. > long_hole_length,]
@@ -66,14 +66,16 @@ rain_regression <- function(shots, isolate_interval){
     all_rain_reg <- lapply(rain_cols, function(x, rain_c){
         # all other rains are 0
         #print(rain_c)
-        shots <- shots[shots$long_hole,]
+        shots_ <- shots
+        shots_ <- shots[shots_$long_hole,]
         
         
         if(isolate_interval){
-            shots <- shots[shots[,"agg_48_hr_rain"] == shots[,x],]
+            shots_ <- shots_[shots_[,"agg_48_hr_rain"] == shots_[,x],]
         }
+        print(dim(shots_))
         
-        lm_res <- lm(as.formula(paste("drive_dist_diff ~ ", x)), data = shots)
+        lm_res <- lm(as.formula(paste("drive_dist_diff ~ ", x)), data = shots_)
         #poly_res <- lm(as.formula(paste("drive_dist_diff ~ poly(", x, ", 2)")), data = isolated_shots)
         return(lm_res)
         #return(list(lm_res, poly_res))
@@ -103,13 +105,44 @@ rain_regression <- function(shots, isolate_interval){
 #     return(all_rain_reg)
 # }
 
+rain_accumulation_time_distances <- function(shots, groupFactor = 2){
+
+    rnded_1 <- data.frame(shots %>% group_by(round(rain_0_to_1_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=1, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_2 <- data.frame(shots %>% group_by(round(rain_1_to_2_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=2, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_4 <- data.frame(shots %>% group_by(round(rain_2_to_4_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=4, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_6 <- data.frame(shots %>% group_by(round(rain_4_to_6_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=6, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_8 <- data.frame(shots %>% group_by(round(rain_6_to_8_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=8, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    
+    rnded_12 <- data.frame(shots %>% group_by(round(rain_8_to_12_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=12, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_18 <- data.frame(shots %>% group_by(round(rain_12_to_18_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=18, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_24 <- data.frame(shots %>% group_by(round(rain_18_to_24_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=24, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_36 <- data.frame(shots %>% group_by(round(rain_24_to_36_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=36, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    rnded_48 <- data.frame(shots %>% group_by(round(rain_36_to_48_hrs_before/groupFactor,digits=1)*groupFactor) %>% summarise(dist_diff = mean(drive_dist_diff, na.rm=TRUE), obs = n(), hrs=48, ster=sqrt(mean((drive_dist_diff - mean(drive_dist_diff, na.rm=TRUE))^2, na.rm = TRUE))))
+    
+    
+    colnames(rnded_1) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_2) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_4) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_6) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_8) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_12) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_18) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_24) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_36) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    colnames(rnded_48) <- c("rain", "dist_diff", "obs", "hrs", "ster")
+    
+    
+    rain_diff_by_hrs <- rbind(rnded_1, rnded_2, rnded_4, rnded_6, rnded_8, rnded_12, rnded_18, rnded_24, rnded_36, rnded_48)
+    return(rain_diff_by_hrs)
+}
+
 
 add_adjusted_distance <- function(shots, wind_coeff, rain_coeffs){
     # add column which is drive distance accounting for wind and rain
     rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
     
     to_adjust_wind <- shots$net_wind * wind_coeff
-    to_adjust_rain <- as.matrix(shots[ ,rain_cols]) %*% matrix(rain_coeffs)
+    to_adjust_rain <- as.vector(as.matrix(shots[ ,rain_cols]) %*% matrix(rain_coeffs))
     
     shots$adjusted_dist <- shots$shot_dis..yards. - to_adjust_rain - to_adjust_wind
     

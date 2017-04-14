@@ -10,3 +10,5 @@ data/shot_ext_data/*
 data/radar-launch-2016.txt
 data/weathersample.csv
 data/pga-hole-coords.csv
+matlab/*
+plots/*

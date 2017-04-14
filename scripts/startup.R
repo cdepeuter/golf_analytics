@@ -3,6 +3,7 @@ shots17$shot_degrees <- unlist(apply(shots17, 1, getShotDegrees))
 
 
 events <- getPGAEvents()
+
 events <- getLocationForEvents(events)
 
 
