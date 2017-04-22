@@ -8,7 +8,7 @@
 #' @import chron
 #' @import readr
 #' @import reshape2
-#' @examples getShotlinkExtTable("shot-ext-safeway-2017.txt", safeway$local_tz)
+#' @examples getShotlinkTable("shot-ext-safeway-2017.txt", safeway$local_tz)
 #' 
 #' 
 
@@ -29,6 +29,21 @@ getShotlinkTable <- function(filename){
     
     return(tb)
 }
+
+
+#' Get Shotlink tables
+#'
+#' These functions load a table from the correct directory
+#' @param dataframe evnts
+#' @keywords pga golf
+#' @return Data Frame of shots
+#' @export
+#' @import chron
+#' @import readr
+#' @import reshape2
+#' @examples getShotlinkExtTable("shot-ext-safeway-2017.txt", safeway$local_tz)
+#' 
+#' 
 
 
 getShotlinkExtTable <- function(filename, timezone = NULL){

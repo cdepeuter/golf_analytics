@@ -17,7 +17,7 @@ shotWeatherSummary(shot_date_time, weather, for_mark = FALSE)
 Data Frame row of summary weather info for the shot
 }
 \description{
-This function returns a data frame row of summary weather information for a shit
+This function returns a data frame row of summary weather information for a shot
 }
 \examples{
 shotWeatherSummary(safeway.shots[1,], safeway.weather)
