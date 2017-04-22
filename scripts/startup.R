@@ -23,7 +23,7 @@ shriners.weather <- getWeatherObsForTournament(shriners)
 # rainy tournaments
 
 safeway <- events[261,]
-safeway.shots <- getShotlinkExtTable("shot-ext-safeway-2017.txt", safeway$local_tz)
+safeway.shots <-  getShotlinkExtTable("shot-ext-tournament-2017-552.txt", safeway$local_tz)
 safeway.weather <- getWeatherObsForTournament(safeway)
 safeway.shot_weather <- matchWeatherToShots(safeway.shots, safeway.weather)
 safeway.drives <- filterShots(safeway.shot_weather)

@@ -98,28 +98,34 @@ windAnalysisForTourney <- function(shot_weather, tourney=""){
     
 }
 
-
-plotDriveDistAdjustWeather <- function(player.drives){
+plotDriveDistClass <- function(player.drives){
     
-    title <- paste(player.drives$player_first[1], player.drives$player_last[1], "drives")
-   
-    
-    player.drives$opp_wind <- player.drives$wind_target_angle_diff > 90 & player.drives$wind_target_angle_diff < 270 & player.drives$last_wind_speed > 6
-    
-    ggplot(player.drives) + geom_point(aes(x=date_time, y=shot_dis..yards., color=opp_wind, size=last_wind_speed)) + ggtitle(title)
-}
-
-
-
-plotDriveDistAdjustWeatherMultipleTourneys <- function(player.drives){
-    
-    title <- paste(player.drives$player_first[1], player.drives$player_last[1], "drives, wind and rain adjusted")
+    title <- paste(player.drives$player_first[1], player.drives$player_last[1], "Probability of driver")
     
     player.drives$indx <- seq(1, nrow(player.drives))
     
     player.drives$opp_wind <- player.drives$net_wind < 0
     
-    ggplot(player.drives) + geom_point(aes(x=indx, y=adjusted_dist, color=long_hole)) + ggtitle(title) + scale_y_continuous(limits=c(225, 375))
+    ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis..yards., color=club_prob)) + ggtitle(title) + scale_y_continuous(limits=c(225, 375))
+}
+
+
+
+
+plotDriveDistClassAdjustWeather <- function(player.drives){
+    
+    title <- paste(player.drives$player_first[1], player.drives$player_last[1], "Probability of driver, conditions adjusted")
+    
+    player.drives$indx <- seq(1, nrow(player.drives))
+    
+    player.drives$opp_wind <- player.drives$net_wind < 0
+    
+    ggplot(player.drives) + geom_point(aes(x=indx, y=adjusted_dist, color=club_prob)) + ggtitle(title) + scale_y_continuous(limits=c(225, 375))
+}
+
+
+driveDistHist <- function(player.drives){
+    ggplot(dj.drives, aes(drive_dist_diff)) + geom_histogram(binwidth = 3) + geom_density()
 }
 
 

@@ -28,4 +28,6 @@ getCourseId <- function( courseName, events){
 
 add_id_to_proviz <- function(){
     proviz <- read.csv("./data/pga-hole-coords.csv", header=TRUE)
+    event_course_id <- events
 }
+

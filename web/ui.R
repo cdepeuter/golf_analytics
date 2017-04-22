@@ -9,8 +9,11 @@ shinyUI(fluidPage(
         ),
         
         mainPanel(
+            
+            plotOutput("adjustedDriveDistPlot"),
+            plotOutput("classPlot"),
             plotOutput("driveDistPlot"),
-            plotOutput("adjustedDriveDistPlot")
+            plotOutput("driveDistHist")
         )
     )
 ))

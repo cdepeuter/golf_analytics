@@ -13,13 +13,28 @@
 # 
 # cos(theta)* windSpeed = relative wind speed
 
-# 
+
+collapseRainCols <- function(shots){
+    old_rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
+    
+    shots$rain_0_to_4_hrs_before <- shots$rain_0_to_1_hrs_before + shots$rain_1_to_2_hrs_before + shots$rain_2_to_4_hrs_before
+    shots$rain_4_to_12_hrs_before <- shots$rain_4_to_6_hrs_before + shots$rain_6_to_8_hrs_before + shots$rain_8_to_12_hrs_before
+    shots$rain_12_to_24_hrs_before <- shots$rain_12_to_18_hrs_before + shots$rain_18_to_24_hrs_before 
+    shots$rain_24_to_48_hrs_before <- shots$rain_24_to_36_hrs_before + shots$rain_36_to_48_hrs_before 
+    
+    shots <- shots[,!colnames(shots) %in% old_rain_cols]
+    return(shots)
+}
+
+
 addDriveRegressionFeatures <- function(shots, use_just_long_holes){
     
     shots$drive_dist_diff <- driveDistDeviation(shots, use_just_long_holes)
-    shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$last_wind_speed)
-    shots$long_hole <- shots$dis_hole_start..yards. > long_hole_length
+    #shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$last_wind_speed)
+    shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$mean_wind_2hrs_before)
     
+    shots$long_hole <- shots$dis_hole_start..yards. > long_hole_length
+    shots$elevation_diff <- shots$start_z_yards - shots$end_z_yards
     #rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
     
     
@@ -28,7 +43,7 @@ addDriveRegressionFeatures <- function(shots, use_just_long_holes){
 
 
 netWindVector <- function(angle_diff, last_wind_speed){
-    # 
+
     diff_from_0_360 <- 180 - abs(180 - angle_diff)
     cos_angle <- cos(diff_from_0_360 * pi / 180)
     
@@ -137,14 +152,15 @@ rain_accumulation_time_distances <- function(shots, groupFactor = 2){
 }
 
 
-add_adjusted_distance <- function(shots, wind_coeff, rain_coeffs){
+add_adjusted_distance <- function(shots, wind_coeff, rain_coeffs, elevation_coeff){
     # add column which is drive distance accounting for wind and rain
     rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
     
     to_adjust_wind <- shots$net_wind * wind_coeff
     to_adjust_rain <- as.vector(as.matrix(shots[ ,rain_cols]) %*% matrix(rain_coeffs))
+    to_adjust_elevation <- shots$elevation_diff * elevation_coeff
     
-    shots$adjusted_dist <- shots$shot_dis..yards. - to_adjust_rain - to_adjust_wind
+    shots$adjusted_dist <- shots$shot_dis..yards. - to_adjust_rain - to_adjust_wind - to_adjust_elevation
     
     return(shots)
 }

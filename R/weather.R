@@ -417,15 +417,16 @@ getHourlyWeather <- function(obs){
 getStationLocation <- function(station_code){
     wugKey <- "61b573b303c14284"
     station_lookup_url <- paste0("http://api.wunderground.com/api/", wugKey,"/geolookup/q/",station_code,".json")
-    
+    print(station_lookup_url)
     station_resp <- getUrlResponse(station_lookup_url)
     
     station_json <- jsonlite::fromJSON(station_resp)
     
     candidate_stations <- station_json$location$nearby_weather_station$airport$station
-        
-    station_coords <- candidate_stations[which(candidate_stations$icao == station_code), c("lon", "lat")]
-   
+    print(candidate_stations)
+    station_coords <- candidate_stations[which(candidate_stations$icao == station_code)[1], c("lon", "lat")]
+    
+    print(station_coords)
     
     return(as.double(station_coords))
 }

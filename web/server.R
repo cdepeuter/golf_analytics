@@ -16,7 +16,14 @@ function(input, output) {
     })
     
     output$adjustedDriveDistPlot <- renderPlot({
-        plotDriveDistAdjustWeatherMultipleTourneys(drive_data())
+        plotDriveDistClassAdjustWeather(drive_data())
+    })
+    
+    output$classPlot <- renderPlot({
+        plotDriveDistClass(drive_data())
+    })
+    output$driveDistHist <- renderPlot({
+        driveDistHist(drive_data)
     })
 
 }
