@@ -1,7 +1,0 @@
- season; perm_tourn; seq_tourn; course; min_year; min_month; min_day; max_year; max_month; max_day; shot_tot; tourn; course; 
-  2017; 464; 10; 552; 2016; 10; 13; 2016; 10; 16; 30418; Safeway Open; Silverado Resort and Spa North; 
-  2017; 54; 30; 746; 2016; 10; 27; 2016; 10; 30; 29723; Sanderson Farms Championship; CC of Jackson; 
-  2017; 47; 50; 538; 2016; 11; 3; 2016; 11; 6; 30101; Shriners Hospitals for Children Open; TPC Summerlin; 
-  2017; 493; 70; 776; 2016; 11; 17; 2016; 11; 20; 21222; The RSM Classic; Sea Island Resort (Seaside); 
-  2017; 16; 110; 656; 2017; 1; 5; 2017; 1; 8; 9063; SBS Tournament of Champions; Plantation Course at Kapalua; 
- 
