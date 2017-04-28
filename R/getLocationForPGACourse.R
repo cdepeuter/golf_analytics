@@ -17,8 +17,10 @@ getLocationForPGACourse <- function(course){
     }
     
     #else get through google maps
-    
     #google places api has a much smaller limit, can only do 100 of these requests a day 
+    
+    print("Course not found in pga-hole-coords.csv, need to re-write shotlink")
+    print(course)
     maps.place <- gsub(" ", "+",  course)
     maps.url <- paste0("https://maps.googleapis.com/maps/api/place/textsearch/json?query=",maps.place, "&key=AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg")
     

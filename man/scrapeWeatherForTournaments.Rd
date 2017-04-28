@@ -9,6 +9,9 @@ scrapeWeatherForTournaments(events)
 \arguments{
 \item{event}{from getPGAEvents() function}
 }
+\value{
+nothing
+}
 \description{
 This grabs the weather response for 3 days before up to the end of multiple tournaments
 respecting the rate limit of the weather underground api

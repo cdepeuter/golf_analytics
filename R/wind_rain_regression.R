@@ -33,7 +33,7 @@ addDriveRegressionFeatures <- function(shots, use_just_long_holes){
     shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$last_wind_speed)
     #shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$mean_wind_2hrs_before)
     
-    shots$long_hole <- shots$dis_hole_start_yards. > long_hole_length
+    shots$long_hole <- shots$dis_hole_start_yards > long_hole_length
     shots$elevation_diff <- shots$start_z_yards - shots$end_z_yards
     #rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
     

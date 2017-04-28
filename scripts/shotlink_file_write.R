@@ -21,7 +21,7 @@ weather_file_name <- paste0("./data/shot-ext-weather-", season, ".txt")
 events_we_have <- c()
 
 if(file.exists(weather_file_name)){
-    print("WEATHER FILES ALREADY EXIST")
+    print(paste("File", weather_file_name, "exists. Only writing new tournaments"))
     weather_file  <- read.table(weather_file_name, header=TRUE, sep=";")
     weather_shots_file <- read.table(weather_shots_file_name, header=TRUE, sep=";")
     events_we_have <- unique(weather_file$course)
@@ -34,6 +34,8 @@ shotlink.directory <- "./data/shotlink"
 allFiles <- list.files(shotlink.directory)
 pattern <- paste0("^shot-ext-([a-z]*)-", season, "-(\\d+).txt$")
 relevant.files <- allFiles[grepl(pattern, allFiles)]
+
+print("Files for current season")
 print(relevant.files)
 
 # get relevant events
@@ -46,7 +48,7 @@ shot_weathers <- by(relevant.events, 1:nrow(relevant.events), function(event){
     
     # can we find a file for this
     this_tourney.pattern <-  paste0("^shot-ext-([a-z]*)-", season, "-", event[["course"]], ".txt$")
-    print(this_tourney.pattern)
+    #print(this_tourney.pattern)
     this_tourney.file <- allFiles[which(grepl(this_tourney.pattern, allFiles))]
     this_tourney.file_path <- paste0(shotlink.directory, "/" , this_tourney.file)
     print(paste("tournament file", this_tourney.file, this_tourney.file_path))
@@ -54,28 +56,26 @@ shot_weathers <- by(relevant.events, 1:nrow(relevant.events), function(event){
     event_file_exists <- (file.exists(this_tourney.file_path) & this_tourney.file_path != "./data/shotlink/")
     skip_event <- skip_event | !event_file_exists
     print(event)
-    print(paste("skipping", skip_event))
-
+    print("Do i already have data or file not found for:")
+    print(paste(event[["tourn"]], skip_event))
     
     if(!skip_event){
        
         
         # get this tournament shots
-        print("getting shots")
         this_tourney.shots <- getShotlinkExtTable(this_tourney.file, event[["local_tz"]])
         
         # get this tournament weather
         this_tourney.weather <- getWeatherObsForTournament(event)
         
-        print("matching shots and weather")
+        print(paste("matching shots and weather for ", event[["tourn"]]))
         # match shots and weather
         start.time  <- Sys.time()
-        
         this_tourney.shot_weather <- matchWeatherToShots(this_tourney.shots, this_tourney.weather)
         end.time <- Sys.time()
         
-        
-        print(paste("time taken", as.character(end.time - start.time)))
+    
+        print(paste("done, time taken", as.character(end.time - start.time)))
         # get tournament summary
         
         # format for mark
@@ -98,6 +98,8 @@ if(exists('weather_file')){
     all.shot.weather <- rbind(weather_shots_file, all.shot.weather)
     all.weather <- rbind(weather_file, all.weather)
 }
+
+print(paste("writing files", weather_shots_file, weather_file_name))
 
 # save everything
 write.table(all.shot.weather, weather_shots_file_name, sep = ";", row.names = FALSE)

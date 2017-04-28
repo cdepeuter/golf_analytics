@@ -2,7 +2,7 @@
 #'
 #' This grabs the weather response for 3 days before up to the end of a tournament
 #' @param event from getPGAEvents() function
-#' @return 
+#' @return nothing
 #' @export
 #' @examples
 #' scrapeWeatherForTournament(masters09)
@@ -10,9 +10,10 @@
 scrapeWeatherForTournament <- function(e){
     # get weather for 3 days before tournament
     dates <- seq.Date(as.Date(e[["start"]])-5, as.Date(e[["end"]]), by="day")
-    
-    t <- lapply(dates, getWeatherResponseForCourseDate, e)
-    return()
+    coords <- e[, c("hole_lat", "hole_lon")]
+    #print(coords)
+    t <- lapply(dates, getWeatherResponseForCoordsDate, paste(coordstest, collapse=","))
+    return(t)
 }
 
 
@@ -21,7 +22,7 @@ scrapeWeatherForTournament <- function(e){
 #' This grabs the weather response for 3 days before up to the end of multiple tournaments
 #' respecting the rate limit of the weather underground api
 #' @param event from getPGAEvents() function
-#' @return 
+#' @return nothing
 #' @export
 #' @examples
 #' scrapeWeatherForTournaments(events)
@@ -36,7 +37,8 @@ scrapeWeatherForTournaments <- function(events){
 
 
 tournamentWeatherSummary <- function(event){
-    obs <- getWeatherObsForTournament(event)
+    # TODO FIX THSI
+    obs <- getWeatherObsLocationDates(event[,c("hole_lat", "hole_lon")], event[,c("start", "end")])
     retinfo <- data.frame(event[["course.1"]])
     obs$date <- as.Date(obs$date, format="%Y%m%d")
     
@@ -44,7 +46,7 @@ tournamentWeatherSummary <- function(event){
     
     weather_sum <- obs %>% group_by(date) %>% dplyr::summarise(mean_temp = mean(tempF, na.rm=TRUE), precip = sum(precip, na.rm=TRUE), mean_wind = mean(windSpeed, na.rm=TRUE), max_wind = max(windSpeed, na.rm=TRUE), max_gust = max(windGust, na.rm=TRUE), wind_direction_variance = circ.disp(windDirDeg * pi/180)[["var"]])
     #print(weather_sum$date)
-    print(event[["start"]])
+    #print(event[["start"]])
     weather_sum$tourn_day <- weather_sum$date - as.Date(event[["start"]])
     
     melted <- melt(weather_sum ,id.vars=c("tourn_day"))
@@ -122,10 +124,10 @@ getWeatherForCourseDate <- function(course, dateStr){
     
     # TODO CHECK TIMEZONE DATA
     # maybe use UTC if this is an issue
-    if(weatherJSON$history$date$tzname !="America/New_York"){
-        print("TIMEZONE NOT STANDARD");
-    }
-    
+    # if(weatherJSON$history$date$tzname !="America/New_York"){
+    #     print("TIMEZONE NOT STANDARD");
+    # }
+    # 
     
     #remove nested dataframe and add info in separate columns
     dateData <- observations$date
@@ -183,7 +185,6 @@ getWeatherForTournaments <- function(courses){
     }
     
     df <- do.call("rbind", infos)
-    print(dim(df))
     colnames(df) <- c("course", "tournament","pre3_obs", "pre2_obs", "pre1_obs", "day1_obs", "day2_obs", "day3_obs", "day4_obs", "day5_obs", "day6_obs", "airport_code", "air_course_dist_miles")
     return(df)
 }
@@ -213,8 +214,18 @@ getDailyDataFromWeatherResp <- function(weatherContent){
 }
 
 
+#' On a given day/course get the weather observations from a local file
+#'
+#' This function loads the weather json from a local directory and writes summary information for that day
+#' @param dateString date of obs
+#' @param coords hase hole_lat, hole_lon
+#' @return summary info for event
+#' @export
+#' @examples
+#'getWeatherResponseForCoordsDate( coords, "20150203")
 
-getWeatherResponseForCourseDate <- function(dateStr, course){
+
+getWeatherResponseForCoordsDate <- function(dateStr, addr){
     # get weather info json response for event at given address on date
     # input: course info with city, state, zip(maybe)
     # output json response from weather underground api
@@ -225,8 +236,7 @@ getWeatherResponseForCourseDate <- function(dateStr, course){
     #get weather and addr for filename
     wugKey <-"61b573b303c14284"
     wugDateStr <- getWugDateFormat(dateStr)
-    addr <- paste(course[["hole_lat"]], course[["hole_lon"]], sep=",") 
-    
+
     if(length(addr) == 0){
         stop("No coordinates for course")
     }
@@ -242,10 +252,9 @@ getWeatherResponseForCourseDate <- function(dateStr, course){
         
         wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/", addr, ".json", sep = "")
         wugUrl <- gsub(" ", "", wugUrl)
-        print(paste("getting weather info ", wugUrl))
+        print(paste("getting weather info from API, saving to local", wugUrl))
         weatherReq <- GET(wugUrl)
         weatherContent <- content(weatherReq, as="text")
-        print(paste("saving weather to file", filename))
         write_file(weatherContent, filename)
     }
     
@@ -280,7 +289,7 @@ dedupe_precip <- function(precip, isMetar){
 
 
 
-getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
+getObsFromWeatherResp <- function(weatherContent){
     
     # for mark is whether to convert 99's to NAS
     
@@ -303,9 +312,9 @@ getObsFromWeatherResp <- function(weatherContent, for_mark = FALSE){
     day <- observations$date$mday
     date <- paste(year, month, day, sep="")
     
-    if(weatherJSON$history$date$tzname !="America/New_York"){
-        print(paste("TIMEZONE NOT STANDARD", tz))
-    }
+    # if(weatherJSON$history$date$tzname !="America/New_York"){
+    #     print(paste("TIMEZONE NOT STANDARD", tz))
+    # }
     
     date_time <- as.POSIXct(paste(date, time), format = "%Y%m%d %H:%M", tz = tz)
     
@@ -364,18 +373,20 @@ fix99 <- function(data){
 
 #' For an event load all weather data for that tournament into a data frame
 #'
-#' @param event from getPGAEvents() function
+#' @param loc
+#' @param dates
 #' @return 
 #' @export
 #' @import geosphere
 #' @examples
-#' getWeatherObsForTournament(masters09)
+#' getWeatherObsLocationDates(safeway[,c("hole_lat", "hole_lon")], safeway[,c("start", "end")])
 
-getWeatherObsForTournament <- function(tournament){
+getWeatherObsLocationDates <- function(loc, dates){
     ## main function used for loading weather info for a tournament
-    dates <- seq.Date(as.Date(tournament[["start"]])-3, as.Date(tournament[["end"]]), by="day")
-    responses <- lapply(dates, getWeatherResponseForCourseDate, tournament)
-    obs_list <- lapply(responses, getObsFromWeatherResp, for_mark)
+    dates <- seq.Date(as.Date(dates[["start"]])-3, as.Date(dates[["end"]]), by="day")
+    
+    responses <- lapply(dates, getWeatherResponseForCoordsDate, paste(loc, collapse = ","))
+    obs_list <- lapply(responses, getObsFromWeatherResp)
     observation_frame <- do.call("rbind", obs_list)
     
     #get location for weather station
@@ -383,7 +394,7 @@ getWeatherObsForTournament <- function(tournament){
     weather_station_coords <- getStationLocation(weather_station_code)
 
     # distance from course to station
-    course_coords <- as.double(c(tournament[["hole_lon"]], tournament[["hole_lat"]]))
+    course_coords <- as.double(c(loc[["hole_lon"]], loc[["hole_lat"]]))
     
     dist <- distVincentySphere(course_coords, as.double(weather_station_coords)) * 0.000621371 
     
@@ -417,16 +428,11 @@ getHourlyWeather <- function(obs){
 getStationLocation <- function(station_code){
     wugKey <- "61b573b303c14284"
     station_lookup_url <- paste0("http://api.wunderground.com/api/", wugKey,"/geolookup/q/",station_code,".json")
-    print(station_lookup_url)
     station_resp <- getUrlResponse(station_lookup_url)
     
     station_json <- jsonlite::fromJSON(station_resp)
-    
     candidate_stations <- station_json$location$nearby_weather_station$airport$station
-    print(candidate_stations)
     station_coords <- candidate_stations[which(candidate_stations$icao == station_code)[1], c("lon", "lat")]
-    
-    print(station_coords)
     
     return(as.double(station_coords))
 }

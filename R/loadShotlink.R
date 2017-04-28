@@ -65,8 +65,8 @@ getShotlinkExtTable <- function(filename, timezone = NULL){
     tb$target_degrees <- unlist(apply(tb, 1, getAimDegrees))
     
     
-    print(colnames(tb))
-    print("cols")
+    # print(colnames(tb))
+    # print("cols")
     # only grab yard distance columns + everything else
     columns_to_take <- c("season", "course", "perm_tourn", "hole", "par", "shot_num", "num_strokes", "player", "round","course_name", "tourn_name","player_first", 
                          "player_last" ,"sg_baseline", "hole_score", "seq_tourn", "time", "shot_type", "loc_start", "loc_start_detail", "loc_end", 

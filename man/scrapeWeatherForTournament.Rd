@@ -9,6 +9,9 @@ scrapeWeatherForTournament(e)
 \arguments{
 \item{event}{from getPGAEvents() function}
 }
+\value{
+nothing
+}
 \description{
 This grabs the weather response for 3 days before up to the end of a tournament
 }

@@ -3,8 +3,9 @@ long_hole_length <- 480
 #all.w2016 <- read.table("data/shot-ext-weather-2016.txt", header = TRUE, sep=";")
 
 
-all.sw <- read.table("data/shots_complete-weather-ext-2016.txt", header=TRUE, sep=";")
-all.sw <- read.table("data/shots_complete-weather-ext-2015.txt", header=TRUE, sep=";")
+#all.sw <- read.table("data/shots_complete-weather-ext-2016.txt", header=TRUE, sep=";")
+#all.sw <- read.table("data/shots_complete-weather-ext-2015.txt", header=TRUE, sep=";")
+all.sw <- read.table("data/shots_complete-weather-ext-2017.txt", header=TRUE, sep=";")
 
 #just_weather <- read.table("data/shot-ext-weather-2015.txt", header=TRUE, sep=";")
 
