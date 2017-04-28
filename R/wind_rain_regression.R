@@ -30,10 +30,10 @@ collapseRainCols <- function(shots){
 addDriveRegressionFeatures <- function(shots, use_just_long_holes){
     
     shots$drive_dist_diff <- driveDistDeviation(shots, use_just_long_holes)
-    #shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$last_wind_speed)
-    shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$mean_wind_2hrs_before)
+    shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$last_wind_speed)
+    #shots$net_wind <-  mapply(netWindVector, shots$wind_target_angle_diff, shots$mean_wind_2hrs_before)
     
-    shots$long_hole <- shots$dis_hole_start..yards. > long_hole_length
+    shots$long_hole <- shots$dis_hole_start_yards. > long_hole_length
     shots$elevation_diff <- shots$start_z_yards - shots$end_z_yards
     #rain_cols <- colnames(shots)[grepl("rain_", colnames(shots))]
     
@@ -55,22 +55,22 @@ driveDistDeviation <- function(shots, use_just_long_holes){
     # get the average for each player
     
     # only take shots no wind no rain
-    #reg_shots <- shots[abs(shots$last_wind_speed) < 3 & shots$agg_48_hr_rain < .02 & shots$dis_hole_start..yards. > 450,]
+    #reg_shots <- shots[abs(shots$last_wind_speed) < 3 & shots$agg_48_hr_rain < .02 & shots$dis_hole_start_yards > 450,]
     
     reg_shots <- shots[ shots$agg_48_hr_rain == 0,]
     
     if(use_just_long_holes){
-        reg_shots <- shots[shots$dis_hole_start..yards. > long_hole_length,]
+        reg_shots <- shots[shots$dis_hole_start_yards > long_hole_length,]
     }
     
-    avg_by_player <- data.frame(reg_shots %>% group_by(player) %>% summarise(avg_dist = mean(shot_dis..yards.)))
+    avg_by_player <- data.frame(reg_shots %>% group_by(player) %>% summarise(avg_dist = mean(shot_dis_yards)))
     
     # make indexable by player
     rownames(avg_by_player) <- avg_by_player$player
     
     avg_dist_vector <- avg_by_player[as.character(shots$player), "avg_dist"]
     
-    return(shots$shot_dis..yards. - avg_dist_vector)
+    return(shots$shot_dis_yards - avg_dist_vector)
 }
 
 
@@ -160,7 +160,7 @@ add_adjusted_distance <- function(shots, wind_coeff, rain_coeffs, elevation_coef
     to_adjust_rain <- as.vector(as.matrix(shots[ ,rain_cols]) %*% matrix(rain_coeffs))
     to_adjust_elevation <- shots$elevation_diff * elevation_coeff
     
-    shots$adjusted_dist <- shots$shot_dis..yards. - to_adjust_rain - to_adjust_wind - to_adjust_elevation
+    shots$adjusted_dist <- shots$shot_dis_yards - to_adjust_rain - to_adjust_wind - to_adjust_elevation
     
     return(shots)
 }

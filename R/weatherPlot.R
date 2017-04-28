@@ -12,7 +12,7 @@ plotMeanWindSpeedAndDriveDist <- function(shots, obs, plotTitle = ""){
     precip_by_hr <- getHourlyWeather(obs)
     
     drives <- shots[shots$shot_num == 1 & shots$par > 3 & shots$loc_end == 4,]
-    hourly_drive_distance <- drives %>% group_by(hour, Date) %>% summarise(dist = mean(shot_dis..inch.))
+    hourly_drive_distance <- drives %>% group_by(hour, Date) %>% summarise(dist = mean(shot_dis_inch))
     hourly_drive_distance$datetime <-  as.POSIXct(paste0(hourly_drive_distance$Date," ", hourly_drive_distance$hour, ":00"), format = "%Y-%m-%d %H:%M")
     hourly_drive_distance$dist_norm <- hourly_drive_distance$dist / max(hourly_drive_distance$dist)
     hourly_drive_distance <- hourly_drive_distance[order(hourly_drive_distance$Date),]
@@ -82,7 +82,7 @@ getWindSpeedVsDist <- function(shots_n_weather, tourney = " "){
     shots_n_weather <- shots_n_weather[shots_n_weather$opposing, ]
     drives <- shots_n_weather[shots_n_weather$shot_num == 1 & shots_n_weather$par > 3 & shots_n_weather$loc_end == 4,]
     
-    speedVDist <- drives %>% dplyr::group_by(last_wind_speed)  %>% dplyr::summarise(drive_dist = mean(shot_dis..inch.), n = n())
+    speedVDist <- drives %>% dplyr::group_by(last_wind_speed)  %>% dplyr::summarise(drive_dist = mean(shot_dis_yards), n = n())
     
     # only take where numObs > 10
     speedVDist <- speedVDist[speedVDist$n >= 10,]
@@ -106,7 +106,7 @@ plotDriveDistClass <- function(player.drives){
     
     player.drives$opp_wind <- player.drives$net_wind < 0
     
-    ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis..yards., color=club_prob)) + ggtitle(title) + scale_y_continuous(limits=c(225, 375))
+    ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis_yards, color=club_prob)) + ggtitle(title) + scale_y_continuous(limits=c(225, 375))
 }
 
 
@@ -137,7 +137,7 @@ plotDriveDistMultipleTourneys <- function(player.drives){
     
     player.drives$opp_wind <- player.drives$net_wind < 0
     
-    ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis..yards., color=opp_wind, size=last_wind_speed)) + ggtitle(title)
+    ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis_yards, color=opp_wind, size=last_wind_speed)) + ggtitle(title)
 }
 
 

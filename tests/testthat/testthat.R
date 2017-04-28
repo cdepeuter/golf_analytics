@@ -58,15 +58,15 @@ test_that("safeway third quad", expect_equal(getAimDegrees(safeway.shots[20,]), 
 
 # filtering shots
 safeway.drives <- filterShots(safeway.shot_weather)
-test_that("safeway mean drive dist", expect_equal(mean(safeway.drives$shot_dis..yards.), 275.5497, tolerance = .00001))
+test_that("safeway mean drive dist", expect_equal(mean(safeway.drives$shot_dis_yards), 275.5497, tolerance = .00001))
 
 
 # player and hole groupings by round working
-id_to_name
+# id_to_name
 safeway.drives.by_player <- avgDistByRound(safeway.drives, "player")
 safeway.drives.by_hole <- avgDistByRound(safeway.drives, "hole")
 
-test_that("phil safeway, first day mean drive dist", expect_equal(mean(safeway.drives[safeway.drives$player == 1810 & safeway.drives$round == 1, "shot_dis..yards."]), 
+test_that("phil safeway, first day mean drive dist", expect_equal(mean(safeway.drives[safeway.drives$player == 1810 & safeway.drives$round == 1, "shot_dis_yards"]), 
                                                                   safeway.drives.by_player[safeway.drives.by_player$player == 1810, "r1_dist"]))
 
-test_that("safeway hole 1 third day", expect_equal(mean(safeway.drives[safeway.drives$hole == 5 & safeway.drives$round == 3, "shot_dis..yards."]), safeway.drives.by_hole[safeway.drives.by_hole$hole == 5, "r3_dist"]))
+test_that("safeway hole 1 third day", expect_equal(mean(safeway.drives[safeway.drives$hole == 5 & safeway.drives$round == 3, "shot_dis_yards"]), safeway.drives.by_hole[safeway.drives.by_hole$hole == 5, "r3_dist"]))

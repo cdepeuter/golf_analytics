@@ -4,15 +4,14 @@ long_hole_length <- 480
 
 
 all.sw <- read.table("data/shots_complete-weather-ext-2016.txt", header=TRUE, sep=";")
-
 all.sw <- read.table("data/shots_complete-weather-ext-2015.txt", header=TRUE, sep=";")
 
-just_weather <- read.table("data/shot-ext-weather-2015.txt", header=TRUE, sep=";")
+#just_weather <- read.table("data/shot-ext-weather-2015.txt", header=TRUE, sep=";")
 
 all.drives <- filterShots(all.sw)
 
 # all drives just long holes 
-#all.drives <- all.drives[all.drives$dis_hole_start..yards. > long_hole_length,]
+#all.drives <- all.drives[all.drives$dis_hole_start_yards > long_hole_length,]
 
 
 all.drives <- addDriveRegressionFeatures(all.drives, TRUE)
@@ -89,43 +88,3 @@ kim.drives <-  all.drives[all.drives$player == 37455,]
 
 
 
-
-## plots
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3 & all.drives$rain_0_to_1_hrs_before != 0,], aes(x=rain_0_to_1_hrs_before, y=drive_dist_diff)) + geom_point()  +
-#  stat_smooth(method="lm", formula = y ~ x) + stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE, position=position_jitter(width=.5))
-# 
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_1_to_2_hrs_before, y=drive_dist_diff)) + geom_point() +
-#     stat_smooth(method="lm", formula = y ~ x) + stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_2_to_4_hrs_before, y=drive_dist_diff)) + geom_point() + stat_smooth(method="lm", formula = y ~ x) +
-#   stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_4_to_6_hrs_before, y=drive_dist_diff)) + geom_point() + stat_smooth(method="lm", formula = y ~ x) +
-# +  stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_6_to_8_hrs_before, y=drive_dist_diff)) + geom_point() +
-#  stat_smooth(method="lm", formula = y ~ x)  + stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_8_to_12_hrs_before, y=drive_dist_diff)) + geom_point() + 
-#   stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_12_to_18_hrs_before, y=drive_dist_diff)) + geom_point() + stat_smooth(method="lm", formula = y ~ x) +
-#  + stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_18_to_24_hrs_before, y=drive_dist_diff)) + geom_point() + stat_smooth(method="lm", formula = y ~ x) 
-# + stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_24_to_36_hrs_before, y=drive_dist_diff)) + geom_point() + stat_smooth(method="lm", formula = y ~ x) + 
-#     stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# 
-# ggplot(all.drives[abs(all.drives$net_wind) < 3,], aes(x=rain_36_to_48_hrs_before, y=drive_dist_diff)) + geom_point() + stat_smooth(method="lm", formula = y ~ x) +
-#     stat_poly_eq(formula=y~x,aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse=TRUE)
-# 
-# 

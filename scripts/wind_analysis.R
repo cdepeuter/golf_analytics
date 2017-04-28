@@ -7,7 +7,7 @@ safeway.shot_weather$wind_shot_diff <- round(deg_wind_diff, digits=-1)
 
 
 safeway.drives <- safeway.shot_weather[safeway.shot_weather$shot_num == 1 & safeway.shot_weather$par > 3 & safeway.shot_weather$loc_end == 4 &safeway.shot_weather$last_wind_speed > 2,]
-safeway.drives_v_wind <- safeway.drives %>% group_by(wind_shot_diff) %>% summarise(drive_dist = mean(shot_dis..inch.))
+safeway.drives_v_wind <- safeway.drives %>% group_by(wind_shot_diff) %>% summarise(drive_dist = mean(shot_dis_yards))
 
 ggplot(safeway.drives_v_wind, aes(x=wind_shot_diff)) + geom_line(aes(y=drive_dist))
 
@@ -27,6 +27,6 @@ three_tourney_shot_weather$wind_shot_diff <- round(deg_wind_diff, digits=-1)
 
 three_tourney_drives <- three_tourney_shot_weather[three_tourney_shot_weather$shot_num == 1 & three_tourney_shot_weather$par > 3 & three_tourney_shot_weather$loc_end == 4 & three_tourney_shot_weather$last_wind_speed > 6,]
 
-three_tourney_drives_v_wind <- three_tourney_drives %>% group_by(wind_shot_diff) %>% summarise(drive_dist = mean(shot_dis..inch.))
+three_tourney_drives_v_wind <- three_tourney_drives %>% group_by(wind_shot_diff) %>% summarise(drive_dist = mean(shot_dis_yards))
 ggplot(three_tourney_drives_v_wind, aes(x=wind_shot_diff)) + geom_line(aes(y=drive_dist))
 

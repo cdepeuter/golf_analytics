@@ -1,12 +1,21 @@
+# # just dustin johnson
+# flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_1_hrs_before + rain_1_to_2_hrs_before +rain_2_to_4_hrs_before +
+#             rain_4_to_6_hrs_before + rain_6_to_8_hrs_before + rain_8_to_12_hrs_before +
+#             rain_12_to_18_hrs_before + rain_18_to_24_hrs_before + rain_24_to_36_hrs_before + rain_36_to_48_hrs_before,  dj.drives, k=2)
 
-# just dustin johnson
-flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_1_hrs_before + rain_1_to_2_hrs_before +rain_2_to_4_hrs_before +
-            rain_4_to_6_hrs_before + rain_6_to_8_hrs_before + rain_8_to_12_hrs_before +
-            rain_12_to_18_hrs_before + rain_18_to_24_hrs_before + rain_24_to_36_hrs_before + rain_36_to_48_hrs_before,  dj.drives, k=2)
 
-classes <-  flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_1_hrs_before + rain_1_to_2_hrs_before +rain_2_to_4_hrs_before +
-                rain_4_to_6_hrs_before + rain_6_to_8_hrs_before + rain_8_to_12_hrs_before +
-                rain_12_to_18_hrs_before + rain_18_to_24_hrs_before + rain_24_to_36_hrs_before + rain_36_to_48_hrs_before,  all.drives, k=2)
+# classes <-  flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_1_hrs_before + rain_1_to_2_hrs_before +rain_2_to_4_hrs_before +
+#                         rain_4_to_6_hrs_before + rain_6_to_8_hrs_before + rain_8_to_12_hrs_before +
+#                         rain_12_to_18_hrs_before + rain_18_to_24_hrs_before + rain_24_to_36_hrs_before + rain_36_to_48_hrs_before,  all.drives, k=2)
+# 
+
+
+
+## do collapse of rain cols
+all.drives <- collapseRainCols(all.drives)
+classes <-  flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_4_hrs_before + rain_4_to_12_hrs_before +rain_12_to_24_hrs_before +
+                        rain_24_to_48_hrs_before ,  all.drives, k=2)
+
 
 parameters(classes, component = 1)
 parameters(classes, component = 2)
@@ -22,15 +31,32 @@ all.drives$club_prob <- post_probs
 
 ## investigate results
 club_choice_by_player <- all.drives %>% group_by(long_hole, player) %>% summarise(club = mean(club_class == 2), obs = n())
-club_choice_by_course_hole <- all.drives %>% group_by( course, hole) %>% summarise(club = mean(club_class == 2), obs = n())
+
+# dustin johnson
+club_choice_by_player[club_choice_by_player$player == 30925,]
+# Bubba watson
+club_choice_by_player[club_choice_by_player$player == 25804,]
+#jim furyk
+club_choice_by_player[club_choice_by_player$player == 10809,]
+#henrik stenson
+club_choice_by_player[club_choice_by_player$player == 21528,]
+# mike weir
+club_choice_by_player[club_choice_by_player$player == 10423,]
+
+
+
+club_choice_by_course_hole <- all.drives %>% group_by( course, hole) %>% summarise(club = mean(club_class == 2), 
+                                                                                   obs = n(), 
+                                                                                   elevation_diff = mean(elevation_diff),
+                                                                                   mean_rain = mean(agg_48_hr_rain),
+                                                                                   )
+
+## interesting players
 
 
 # load course hole information
 course_hole_coords <- read.csv("data/pga-hole-coords.csv")
-pga_courses <- events[,c("course", "course.1")]
-not_dupe <- pga_courses[!duplicated(pga_courses),]
-colnames(pga_courses) <- c("course_id", "course")
-course_hole_coords <- merge(course_hole_coords, pga_courses)
+
 
 # 
 # 

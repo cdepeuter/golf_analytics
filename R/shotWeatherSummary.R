@@ -71,7 +71,7 @@ shotWeatherSummary <- function(shot_date_time, weather, for_mark = FALSE){
     
     last_wind_dir_degrees <- last_obs_before$windDirDeg
     latest_weather_wind <- weather[which(weather_time_diff > - 2 * 60 & weather_time_diff <= 0), "windSpeed"]
-    mean_wind_2hrs_before <- mean(latest_weather_wind)
+    mean_wind_2hrs_before <- mean(latest_weather_wind, na.rm = TRUE)
     
     weather_time <- last_obs_before$date_time
     

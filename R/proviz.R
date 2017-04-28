@@ -55,6 +55,7 @@ getCleanProvizForCourse <- function(courseName){
         #re-arrange cols
         frontNames <- c("course", "link")
         course.points <- course.points[, c(frontNames, colnames(course.points)[!colnames(course.points) %in% frontNames])]
+        course.points$id <- course.id
         return(course.points)
     } else{
         print(paste("na course id, skipping", courseName))

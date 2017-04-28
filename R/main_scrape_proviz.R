@@ -14,7 +14,7 @@ main_scrape_proviz <- function(){
     print(length(pga.ids))
     dfs <- lapply(pga.allcourses, getCleanProvizForCourse)
     df <- do.call("rbind", dfs)
-    df <- cbind(df, pga.ids)
+    #df <- cbind(df, pga.ids)
     return(df)
 }
 

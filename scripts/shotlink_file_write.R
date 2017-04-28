@@ -13,7 +13,7 @@ events <- getPGAEvents()
 events <- getLocationForEvents(events)
 
 
-season <- 2015
+season <- 2017
 
 # do we already have a fule for these events?
 weather_shots_file_name <- paste0("./data/shots_complete-weather-ext-", season, ".txt")
