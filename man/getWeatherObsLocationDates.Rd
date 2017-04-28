@@ -2,9 +2,17 @@
 % Please edit documentation in R/weather.R
 \name{getWeatherObsLocationDates}
 \alias{getWeatherObsLocationDates}
-\title{For an event load all weather data for that tournament into a data frame}
+\title{Get Weather for location and dates}
 \usage{
 getWeatherObsLocationDates(loc, dates)
+}
+\arguments{
+\item{list}{loc}
+
+\item{list}{dates}
+}
+\value{
+dataframe of weather observations
 }
 \description{
 For an event load all weather data for that tournament into a data frame

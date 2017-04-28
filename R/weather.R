@@ -371,11 +371,12 @@ fix99 <- function(data){
     return(data)
 }
 
+#' Get Weather for location and dates
+#' 
 #' For an event load all weather data for that tournament into a data frame
-#'
-#' @param loc
-#' @param dates
-#' @return 
+#' @param list loc
+#' @param list dates
+#' @return dataframe of weather observations 
 #' @export
 #' @import geosphere
 #' @examples

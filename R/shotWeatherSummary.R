@@ -1,3 +1,5 @@
+#' shot weather summary
+#' 
 #' This function returns a data frame row of summary weather information for a shot
 #' @param date_time shot_date_time input first year of events to return, Defaults to 0 (no lower bound)
 #' @param data.frame weather last year of events to return, Defaults to 10000 (no upper bound)

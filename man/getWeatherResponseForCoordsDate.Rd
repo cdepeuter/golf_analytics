@@ -4,12 +4,12 @@
 \alias{getWeatherResponseForCoordsDate}
 \title{On a given day/course get the weather observations from a local file}
 \usage{
-getWeatherResponseForCoordsDate(coords, dateStr)
+getWeatherResponseForCoordsDate(dateStr, addr)
 }
 \arguments{
-\item{coords}{hase hole_lat, hole_lon}
-
 \item{dateString}{date of obs}
+
+\item{coords}{hase hole_lat, hole_lon}
 }
 \value{
 summary info for event

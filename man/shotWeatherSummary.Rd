@@ -2,7 +2,7 @@
 % Please edit documentation in R/shotWeatherSummary.R
 \name{shotWeatherSummary}
 \alias{shotWeatherSummary}
-\title{This function returns a data frame row of summary weather information for a shot}
+\title{shot weather summary}
 \usage{
 shotWeatherSummary(shot_date_time, weather, for_mark = FALSE)
 }
