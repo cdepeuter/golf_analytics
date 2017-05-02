@@ -180,7 +180,7 @@ add_adjusted_distance <- function(shots, wind_coeff, rain_coeffs, elevation_coef
 
 
 yearlyReport <- function(shot_weather){
-    
+    long_hole_length <<- 480
     just.drives <- filterShots(shot_weather)
     
     # all drives just long holes 
