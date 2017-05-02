@@ -4,12 +4,10 @@
 \alias{getWeatherObsLocationDates}
 \title{Get Weather for location and dates}
 \usage{
-getWeatherObsLocationDates(loc, dates)
+getWeatherObsLocationDates(queries)
 }
 \arguments{
-\item{list}{loc}
-
-\item{list}{dates}
+\item{list}{queries list of queries to grab observations from in "lat,lon-date"}
 }
 \value{
 dataframe of weather observations
@@ -18,6 +16,6 @@ dataframe of weather observations
 For an event load all weather data for that tournament into a data frame
 }
 \examples{
-getWeatherObsLocationDates(safeway[,c("hole_lat", "hole_lon")], safeway[,c("start", "end")])
+getWeatherObsLocationDates(queries)
 }
 

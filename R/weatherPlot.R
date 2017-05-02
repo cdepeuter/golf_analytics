@@ -140,6 +140,10 @@ plotDriveDistMultipleTourneys <- function(player.drives){
     ggplot(player.drives) + geom_point(aes(x=indx, y=shot_dis_yards, color=opp_wind, size=last_wind_speed)) + ggtitle(title)
 }
 
+plotRain <- function(weather){
+    
+}
+
 
 
 

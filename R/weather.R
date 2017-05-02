@@ -9,10 +9,12 @@
 
 scrapeWeatherForTournament <- function(e){
     # get weather for 3 days before tournament
-    dates <- seq.Date(as.Date(e[["start"]])-5, as.Date(e[["end"]]), by="day")
-    coords <- e[, c("hole_lat", "hole_lon")]
+    dates <- seq.Date(as.Date(e[["start"]])-5, as.Date(e[["end"]]), by="day") %>% lapply(getWugDateFormat)
+    locString <- paste(e[, c("hole_lat", "hole_lon")], collapse = ",")
+    reqs <- paste(locString, dates, sep="-")
+
     #print(coords)
-    t <- lapply(dates, getWeatherResponseForCoordsDate, paste(coordstest, collapse=","))
+    t <- lapply(reqs, makeWeatherRequest)
     return(t)
 }
 
@@ -38,7 +40,8 @@ scrapeWeatherForTournaments <- function(events){
 
 tournamentWeatherSummary <- function(event){
     # TODO FIX THSI
-    obs <- getWeatherObsLocationDates(event[,c("hole_lat", "hole_lon")], event[,c("start", "end")])
+    queries <- paste(event[,c("hole_lat", "hole_lon")], event[,c("start", "end")])
+    obs <- getWeatherObsLocationDates(queries)
     retinfo <- data.frame(event[["course.1"]])
     obs$date <- as.Date(obs$date, format="%Y%m%d")
     
@@ -80,75 +83,6 @@ tournamentWeatherSummaries <- function(evnts){
     binded <- binded[, c(col_idx, (1:ncol(binded))[-col_idx])]
     
     return(binded)
-}
-
-
-#' On a given day/course get the weather observations from a local file
-#'
-#' This function loads the weather json from a local directory and writes summary information for that day
-#' @param string input name of course
-#' @param string date of obs
-#' @return summary info for event
-#' @export
-#' @examples
-#'getWeatherForCourseDate("TPC Scottsdale")
-
-
-
-getWeatherForCourseDate <- function(course, dateStr){
-    # get weather info json response for event at given address on date
-    # input: course info with city, state, zip(maybe)
-    # output json response from weather underground api
-    
-    # DONT run this function in vectorized format on an array
-    # weatherUnderground maxes API calls at 10 per minute
-    
-    #get weather and addr for filename
-    wugDateStr <- dateStr
-    
-    addr <- paste(course[["lat"]], course[["lng"]], sep=",") 
-    
-    
-    filename <- paste0("./data/weather/",addr, "-", wugDateStr, ".json")
-    filename <- gsub(" ", "", filename)
-    
-    
-    if(!file.exists(filename)){
-        stop("NO LOCAL FILE")
-    }
-    
-    
-    weatherContent <- read_file(filename)
-    weatherJSON <- jsonlite::fromJSON(weatherContent)
-    observations <- weatherJSON$history$observations
-    
-    # TODO CHECK TIMEZONE DATA
-    # maybe use UTC if this is an issue
-    # if(weatherJSON$history$date$tzname !="America/New_York"){
-    #     print("TIMEZONE NOT STANDARD");
-    # }
-    # 
-    
-    #remove nested dataframe and add info in separate columns
-    dateData <- observations$date
-    hr <- observations$date$hour
-    min  <- observations$date$min
-    time <- as.integer(paste(hr, min, sep=""))
-    
-    
-    year <- observations$date$year
-    month <- observations$date$mon
-    day <- observations$date$mday
-    
-    date <- paste(year, month, day, sep="")
-    
-    observations$date <- date
-    observations$time <- time
-    
-    #drop utc nested dataframe, other column which is probably meter name, 
-    observations <- observations[, !(colnames(observations) %in% c("utcdate" ))]
-    
-    return(observations)
 }
 
 
@@ -222,10 +156,10 @@ getDailyDataFromWeatherResp <- function(weatherContent){
 #' @return summary info for event
 #' @export
 #' @examples
-#'getWeatherResponseForCoordsDate( coords, "20150203")
+#' makeWeatherRequest( coords, "20150203")
 
 
-getWeatherResponseForCoordsDate <- function(dateStr, addr){
+makeWeatherRequest <- function(query){
     # get weather info json response for event at given address on date
     # input: course info with city, state, zip(maybe)
     # output json response from weather underground api
@@ -235,29 +169,41 @@ getWeatherResponseForCoordsDate <- function(dateStr, addr){
     
     #get weather and addr for filename
     wugKey <-"61b573b303c14284"
-    wugDateStr <- getWugDateFormat(dateStr)
-
-    if(length(addr) == 0){
-        stop("No coordinates for course")
-    }
     
-    filename <- paste0("./data/weather/",addr, "-", wugDateStr, ".json")
-    filename <- gsub(" ", "", filename)
+    #print(query)
+    filename <- paste0("./data/weather/", query, ".json")
     
     if(file.exists(filename)){
         print(paste("getting", filename, "locally"))
         weatherContent <- read_file(filename)
     }else{
         #no weather locally, grab file and save it
-        
-        wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_",wugDateStr, "/q/", addr, ".json", sep = "")
+        query <- paste0(substr(query, nchar(query)-7, nchar(query)), '/q/', substr(query, 0, nchar(query)-8))
+        #print(query)
+        wugUrl <- paste("http://api.wunderground.com/api/", wugKey,"/history_", query, ".json", sep = "")
         wugUrl <- gsub(" ", "", wugUrl)
         print(paste("getting weather info from API, saving to local", wugUrl))
         weatherReq <- GET(wugUrl)
         weatherContent <- content(weatherReq, as="text")
         write_file(weatherContent, filename)
+        
+        # count requests, save time 
+        numWeatherRequests <<- numWeatherRequests + 1
+        lastWeatherRequest <- Sys.time()
     }
     
+    if(exists("numWeatherRequests") & (numWeatherRequests > 9)){
+        # has it been a minut eince last request?
+        if(difftime(lastWeatherRequest , Sys.time() , "mins") < -1){
+            #reset count, been over a minute since last request
+            numWeatherRequests <<- 0
+        }else{
+            #its been less than an minute and 10 requests
+            print("10 requests recorded in last minute, sleeping")
+            Sys.sleep(60)
+            numWeatherRequests <<- 0
+        }
+    }
     
     return(weatherContent)
 }
@@ -292,8 +238,6 @@ dedupe_precip <- function(precip, isMetar){
 getObsFromWeatherResp <- function(weatherContent){
     
     # for mark is whether to convert 99's to NAS
-    
-    
     #from a json response get the observations
     
     weatherJSON <- jsonlite::fromJSON(weatherContent)
@@ -304,6 +248,7 @@ getObsFromWeatherResp <- function(weatherContent){
     observations$hour <- hr
     min  <- observations$date$min
     time <- as.integer(paste(hr, min, sep=""))
+
     time <- unlist(lapply(time, fixTime))
     tz <- observations$date$tzname[[1]]
     
@@ -374,19 +319,17 @@ fix99 <- function(data){
 #' Get Weather for location and dates
 #' 
 #' For an event load all weather data for that tournament into a data frame
-#' @param list loc
-#' @param list dates
+#' @param list queries list of queries to grab observations from in "lat,lon-date"
 #' @return dataframe of weather observations 
 #' @export
 #' @import geosphere
 #' @examples
-#' getWeatherObsLocationDates(safeway[,c("hole_lat", "hole_lon")], safeway[,c("start", "end")])
+#' getWeatherObsLocationDates(queries)
 
-getWeatherObsLocationDates <- function(loc, dates){
+getWeatherObsLocationDates <- function(queries){
     ## main function used for loading weather info for a tournament
-    dates <- seq.Date(as.Date(dates[["start"]])-3, as.Date(dates[["end"]]), by="day")
-    
-    responses <- lapply(dates, getWeatherResponseForCoordsDate, paste(loc, collapse = ","))
+   
+    responses <- lapply(queries, makeWeatherRequest)
     obs_list <- lapply(responses, getObsFromWeatherResp)
     observation_frame <- do.call("rbind", obs_list)
     

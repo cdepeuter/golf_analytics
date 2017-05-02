@@ -1,14 +1,13 @@
 print("getting package from github")
-library(devtools)
-library(httr)
-with_config(use_proxy(url = "198.169.4.24", port = 3128), install_github("cdepeuter/golf_analytics"))
+#library(devtools)
+#library(httr)
+#with_config(use_proxy(url = "198.169.4.24", port = 3128), install_github("cdepeuter/golf_analytics"))
 #install_github("cdepeuter/golf_analytics")
-library(golfAnalysis)
+#library(golfAnalysis)
 
 
 events <- getPGAEvents()
 events <- getLocationForEvents(events)
-
 args <- commandArgs()
 season <- as.integer(args[6])
 #season <- 2017
@@ -87,16 +86,28 @@ shot_weathers <- by(relevant.events, 1:nrow(relevant.events), function(event){
 # make sure you're taking just the data frames
 take_by <- lapply(shot_weathers, typeof) == "list"
 
-# bind together
-all.shot.weather <- do.call("rbind", shot_weathers[take_by])
-all.weather <- format_for_mark(all.shot.weather)
+
+
+# bind together, if we have stuff to add
+if(sum(take_by) > 0){
+    all.shot.weather <- do.call("rbind", shot_weathers[take_by])
+    all.weather <- format_for_mark(all.shot.weather)
+    
+}
 
 print(paste("writing files", weather_shots_file_name, weather_file_name))
 #if we already have info bind what we just got to teh old stuff
+
 if(file.exists(weather_file_name)){
     all.shot.weather <- rbind(weather_shots_file, all.shot.weather)
     all.weather <- rbind(weather_file, all.weather)
+} else{
+    all.shot.weather <- weather_shots_file
+    all.weather <- weather_file
 }
+
+# generate yearly report of daya
+yearlyReport(all.shot.weather)
 
 # save everything
 write.table(all.shot.weather, weather_shots_file_name, sep = ";", row.names = FALSE)

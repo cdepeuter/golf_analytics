@@ -164,3 +164,66 @@ add_adjusted_distance <- function(shots, wind_coeff, rain_coeffs, elevation_coef
     
     return(shots)
 }
+
+
+#' Generate yearly summary report of statistics for holes, hope to identify interesting ones for analysis
+#'
+#' This function calculates and saves info for a tournament
+#' @param shot_weather dataframe of shots and weather
+#' @return saved info
+#' @export
+#' @import flexmix
+#' @import ggpmisc
+#' @import ggplot2
+#' @examples
+#' yearlyReport(sw)
+
+
+yearlyReport <- function(shot_weather){
+    
+    just.drives <- filterShots(shot_weather)
+    
+    # all drives just long holes 
+    #all.drives <- all.drives[all.drives$dis_hole_start_yards > long_hole_length,]
+    
+    
+    just.drives <- addDriveRegressionFeatures(just.drives, TRUE)
+    just.drives <- just.drives[!is.na(just.drives$drive_dist_diff), ]
+    
+    just.drives <- collapseRainCols(just.drives)
+    classes <-  flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_4_hrs_before + rain_4_to_12_hrs_before +rain_12_to_24_hrs_before +
+                            rain_24_to_48_hrs_before ,  just.drives, k=2)
+    
+    
+    
+    just.drives$club_class <- flex_results
+    just.drives$club_prob <- post_probs
+    
+    
+    club_choice_by_course_hole <- just.drives %>% group_by( course, hole) %>% summarise(club = mean(club_class == 2), 
+                                                                                       obs = n(), 
+                                                                                       elevation_diff = mean(elevation_diff),
+                                                                                       mean_rain = mean(agg_48_hr_rain),
+                                                                                       mean_dist_long_club = mean(shot_dis_yards[club_class == 2]),
+                                                                                       var_dist_long_club = var(shot_dis_yards[club_class == 2]),
+                                                                                       mean_dist_short_club = mean(shot_dis_yards[club_class != 2]),
+                                                                                       var_dist_short_club = var(shot_dis_yards[club_class != 2]),
+                                                                                       rnd_1_dist = mean(shot_dis_yards[round == 1]),
+                                                                                       rnd_2_dist = mean(shot_dis_yards[round == 2]),
+                                                                                       rnd_3_dist = mean(shot_dis_yards[round == 3]),
+                                                                                       rnd_4_dist = mean(shot_dis_yards[round == 4]),
+                                                                                       rnd_1_rain = mean(agg_48_hr_rain[round == 1]),
+                                                                                       rnd_2_rain = mean(agg_48_hr_rain[round == 2]),
+                                                                                       rnd_3_rain = mean(agg_48_hr_rain[round == 3]),
+                                                                                       rnd_4_rain = mean(agg_48_hr_rain[round == 4]),
+                                                                                       rnd_1_wind = mean(last_wind_speed[round == 1]),
+                                                                                       rnd_2_wind = mean(last_wind_speed[round == 2]),
+                                                                                       rnd_3_wind = mean(last_wind_speed[round == 3]),
+                                                                                       rnd_4_wind = mean(last_wind_speed[round == 4])
+                                                                                       
+    )
+    
+    write.table(club_choice_by_course_hole, paste("./data/", just.drives$season[1], "weather_regression_summary.txt"),  sep = ";", row.names = FALSE)
+}
+
+

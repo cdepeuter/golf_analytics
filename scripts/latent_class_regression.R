@@ -45,12 +45,6 @@ club_choice_by_player[club_choice_by_player$player == 10423,]
 
 
 
-club_choice_by_course_hole <- all.drives %>% group_by( course, hole) %>% summarise(club = mean(club_class == 2), 
-                                                                                   obs = n(), 
-                                                                                   elevation_diff = mean(elevation_diff),
-                                                                                   mean_rain = mean(agg_48_hr_rain),
-                                                                                   )
-
 ## interesting players
 
 

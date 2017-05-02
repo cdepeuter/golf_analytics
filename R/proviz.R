@@ -73,8 +73,6 @@ getCleanProvizForCourse <- function(courseName){
 #' @return string of file in /data/proviz directory for the corresponding file name.
 #' @export
 #' @examples
-
-
 getProvizFileForCourse <- function(course){
     
     fileName <- "./data/proviz/exceptions.txt"

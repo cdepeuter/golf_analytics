@@ -70,6 +70,9 @@ getAngle <- function(delta_x, delta_y){
 
 
 fixTime <- function(tm){
+    if(nchar(tm) == 1){
+        return(paste0("00:0", tm))
+    }
     if(nchar(tm) == 2){
         return(paste0("00:", tm))
     }
