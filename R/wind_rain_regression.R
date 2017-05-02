@@ -195,7 +195,7 @@ yearlyReport <- function(shot_weather){
                             rain_24_to_48_hrs_before ,  just.drives, k=2)
     
     
-    
+    flex_results <- clusters(classes)
     just.drives$club_class <- flex_results
     just.drives$club_prob <- post_probs
     
