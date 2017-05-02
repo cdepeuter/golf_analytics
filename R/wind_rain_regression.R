@@ -197,9 +197,7 @@ yearlyReport <- function(shot_weather){
     
     flex_results <- clusters(classes)
     just.drives$club_class <- flex_results
-    just.drives$club_prob <- post_probs
-    
-    
+
     club_choice_by_course_hole <- just.drives %>% group_by( course, hole) %>% summarise(club = mean(club_class == 2), 
                                                                                        obs = n(), 
                                                                                        elevation_diff = mean(elevation_diff),
