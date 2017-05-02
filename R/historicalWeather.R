@@ -13,6 +13,11 @@
 historicalWeatherForEvent <- function(event){
     # for a given location from an event, get weather for previous 5 years on those dates
     
+    
+    if(!exists("numWeatherRequests")){
+        numWeatherRequests <<- 0
+        lastWeatherRequest <- Sys.time()
+    }
     # for up to 5 years back, whats the weather like here?
     all.weathers <- lapply(0:5, function(years){
         weeks <- 3
@@ -25,6 +30,7 @@ historicalWeatherForEvent <- function(event){
         dates <- seq.Date(firstDate, lastDate, by="day") %>% lapply(getWugDateFormat)
         locString <- paste(event[, c("hole_lat", "hole_lon")], collapse = ",")
         reqs <- paste(locString, dates, sep="-")
+        #print(reqs)
         thisYearWeather <- getWeatherObsLocationDates(reqs)
         
         return(thisYearWeather)

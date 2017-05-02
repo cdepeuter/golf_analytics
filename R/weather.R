@@ -328,7 +328,8 @@ fix99 <- function(data){
 
 getWeatherObsLocationDates <- function(queries){
     ## main function used for loading weather info for a tournament
-   
+    #print("hi")
+    #print(queries)
     responses <- lapply(queries, makeWeatherRequest)
     obs_list <- lapply(responses, getObsFromWeatherResp)
     observation_frame <- do.call("rbind", obs_list)
@@ -338,9 +339,16 @@ getWeatherObsLocationDates <- function(queries){
     weather_station_coords <- getStationLocation(weather_station_code)
 
     # distance from course to station
-    course_coords <- as.double(c(loc[["hole_lon"]], loc[["hole_lat"]]))
+    query <- queries[1]
+    coordstr <- substr(query, 0, nchar(query)-9)
+    #print(coordstr)
+    loc <- strsplit(coordstr, split=",")
+    #print(loc)
+
     
-    dist <- distVincentySphere(course_coords, as.double(weather_station_coords)) * 0.000621371 
+    course_coords <- as.double(loc[[1]])
+    #print(course_coords)
+    dist <- distVincentySphere(rev(course_coords), as.double(weather_station_coords)) * 0.000621371 
     
     # add to frame
     observation_frame$dist_from_weather_miles <- dist
