@@ -44,11 +44,12 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
         if(is.na(locString)){
             locString <- paste(event[, c("hole_lat", "hole_lon")], collapse = ",")
         }
+
         if(plotsfile == "./plots/"){
             # update file names on first run
-            filename <- paste0(filename, as.character(firstDate),"_", locString, ".txt")
+            filename <<- paste0(filename, as.character(firstDate),"_", locString, ".txt")
             
-            plotsfile <- paste0(plotsfile, as.character(firstDate),"_", locString)
+            plotsfile <<- paste0(plotsfile, as.character(firstDate),"_", locString)
             
         }
         
@@ -62,7 +63,7 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
     
     past.weather <- do.call("rbind", all.weathers)
     
-    print(colnames(past.weather))
+    
     # add year, month date separate columns, group by year, month, 
     days_of_rain <- past.weather %>% mutate( date_of_year=format(date_time, "%j"), year=format(date_time, "%y")) %>% 
                                      group_by(date) %>% 
