@@ -40,7 +40,7 @@ getPGAEvents <- function(startYear=0, endYear=10000, course = NA, tournament = N
         if(length(tgp) > 0){
             
             
-            reg <- 'event_course_date-(\\d)+'
+            reg <- 'event_course_date(-|_)(\\d)+'
             extracted <- regexpr(reg, file)
             yearStr <- substr(file,extracted+18,extracted+attr(extracted,"match.length")-1)
             

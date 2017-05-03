@@ -1,0 +1,26 @@
+player drive plots to look at
+
+jamie lovemark
+adam scott (late year jump)
+
+
+when I'm looking at just long holes, should I do that just to get regression coeffs or all shots total
+
+am i doing group by dist right? when i look at just long holes after subtracting avg dist for all shots, then i get not great looking coeffs (some positive). Since im looking at the shots on long holes, these shots will be longer.
+
+when i remove avg for ALL shots, mean diff = - 1.8
+when i remove long hole shots, mean diff = - 7.8
+
+force intercept 0 ?
+
+What pct of shots do people use non driver
+
+
+latent mixture models right?
+
+how many classes should latent variable show
+
+
+Just use all drives to get mean dist and regression features, use all holes othersise
+
+
