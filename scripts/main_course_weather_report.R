@@ -14,13 +14,13 @@ course <- as.integer(args[7])
 loc <- NA
 date_ <- NA
 
-
+print(paste("params", season, course))
 if((season == 0) & (course == 0)){
     # use lat and lon
     loc <- as.integer(args[8])
     date_ <- as.integer(args[9])
     
-    print(paste("getting historical weather for ", loc, date))
+    print(paste("getting historical weather for ", loc, date_))
     historicalWeatherForEvent(NA, loc, date_)
     
 }else{

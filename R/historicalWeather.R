@@ -19,12 +19,15 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
         lastWeatherRequest <<- Sys.time()
     }
     filename <- "./data/historical_weather_"
+    plotsfile <- "./plots/"
 
         # for up to 5 years back, whats the weather like here?
     all.weathers <- lapply(0:5, function(years){
         weeks <- 2
         if(!is.na(midDate)){
             filename <- paste0(filename, midDate)
+            plotsfile <- paste0(plotsfile, midDate)
+            
             firstDate <- as.Date(midDate) - 7 * weeks
             lastDate <-  as.Date(midDate) + 7 * weeks
             # adjust by year
@@ -33,7 +36,7 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
            
         }else{
             filename <- paste0(filename, event[["start"]])
-            
+            plotsfile <- paste0(plotsfile, event[["start"]])
             firstDate <- event[["start"]] - 7 * weeks
             lastDate <- event[["end"]] + 7 * weeks
             # adjust by year
@@ -47,6 +50,7 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
             locString <- paste(event[, c("hole_lat", "hole_lon")], collapse = ",")
         }
         filename <- paste0(filename,locString, ".txt")
+        plotsfile <- paste0(plotsfile, locString)
         
         reqs <- paste(locString, dates, sep="-")
         #print(reqs)
@@ -73,8 +77,8 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
     
 
     write.table(days_of_rain, filename, sep=";", row.names = FALSE)
-    ggsave(paste0("./plots/", event[["tourn"]], "_", event[["season"]],"_precip.png"),  ggplot(days_of_rain, aes(x=date_num, y=rain, group=1)) + geom_line() + facet_grid(yr ~ .) +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Daily Rainfall"))
-    ggsave(paste0("./plots/", event[["tourn"]], "_", event[["season"]],"_wind.png"),  ggplot(days_of_rain, aes(x=date_num, y=avg_wind_speed, group=1)) + geom_line() + facet_grid(yr ~ .)  +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Wind"))
+    ggsave(paste0(plotsfile, "_precip.png"),  ggplot(days_of_rain, aes(x=date_num, y=rain, group=1)) + geom_line() + facet_grid(yr ~ .) +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Daily Rainfall"))
+    ggsave(paste0(plotsfile, "_wind.png"),  ggplot(days_of_rain, aes(x=date_num, y=avg_wind_speed, group=1)) + geom_line() + facet_grid(yr ~ .)  +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Wind"))
     
    
     #return(past.weather)
