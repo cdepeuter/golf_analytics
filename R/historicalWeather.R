@@ -46,7 +46,7 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
         }
         if(plotsfile == "./plots/"){
             # update file names on first run
-            filename <- paste0(filename, as.character(firstDate),"_", locString ".txt")
+            filename <- paste0(filename, as.character(firstDate),"_", locString, ".txt")
             
             plotsfile <- paste0(plotsfile, as.character(firstDate),"_", locString)
             
