@@ -25,9 +25,6 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
     all.weathers <- lapply(0:5, function(years){
         weeks <- 2
         if(!is.na(midDate)){
-            filename <- paste0(filename, midDate)
-            plotsfile <- paste0(plotsfile, midDate)
-            
             firstDate <- as.Date(midDate) - 7 * weeks
             lastDate <-  as.Date(midDate) + 7 * weeks
             # adjust by year
@@ -35,8 +32,6 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
             lastDate <- lastDate - years * 365
            
         }else{
-            filename <- paste0(filename, event[["start"]])
-            plotsfile <- paste0(plotsfile, event[["start"]])
             firstDate <- event[["start"]] - 7 * weeks
             lastDate <- event[["end"]] + 7 * weeks
             # adjust by year
@@ -49,8 +44,13 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
         if(is.na(locString)){
             locString <- paste(event[, c("hole_lat", "hole_lon")], collapse = ",")
         }
-        filename <- paste0(filename,locString, ".txt")
-        plotsfile <- paste0(plotsfile, locString)
+        if(plotsfile == "./plots/"){
+            # update file names on first run
+            filename <- paste0(filename, as.character(firstDate),"_", locString ".txt")
+            
+            plotsfile <- paste0(plotsfile, as.character(firstDate),"_", locString)
+            
+        }
         
         reqs <- paste(locString, dates, sep="-")
         #print(reqs)
