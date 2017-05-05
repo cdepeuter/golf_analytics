@@ -20,6 +20,7 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
     }
     filename <- "./data/historical_weather_"
     plotsfile <- "./plots/"
+    summaryfilename <- ""
 
         # for up to 5 years back, whats the weather like here?
     all.weathers <- lapply(0:5, function(years){
@@ -47,8 +48,9 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
 
         if(plotsfile == "./plots/"){
             # update file names on first run
+            summaryfilename <<- paste0(filename, "summary_", as.character(firstDate),"_", locString, ".txt")
             filename <<- paste0(filename, as.character(firstDate),"_", locString, ".txt")
-            
+
             plotsfile <<- paste0(plotsfile, as.character(firstDate),"_", locString)
             
         }
@@ -78,7 +80,8 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
                                                date_num=date_of_year[1], 
                                                yr = year[1])
     
-
+    
+    write.table(days_of_rain, summaryfilename, sep=";", row.names = FALSE)
     ggsave(paste0(plotsfile, "_precip.png"),  ggplot(days_of_rain, aes(x=date_num, y=rain, group=1)) + geom_line() + facet_grid(yr ~ .) +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Daily Rainfall"))
     ggsave(paste0(plotsfile, "_wind.png"),  ggplot(days_of_rain, aes(x=date_num, y=avg_wind_speed, group=1)) + geom_line() + facet_grid(yr ~ .)  +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Wind"))
     
