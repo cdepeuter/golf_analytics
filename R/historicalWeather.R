@@ -64,7 +64,9 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
     past.weather <- do.call("rbind", all.weathers)
     
     
-    # add year, month date separate columns, group by year, month, 
+    write.table(past.weather, filename, sep=";", row.names = FALSE)
+   
+     # add year, month date separate columns, group by year, month, 
     days_of_rain <- past.weather %>% mutate( date_of_year=format(date_time, "%j"), year=format(date_time, "%y")) %>% 
                                      group_by(date) %>% 
                                      summarise(rain = sum(precip), 
@@ -77,7 +79,6 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
                                                yr = year[1])
     
 
-    write.table(days_of_rain, filename, sep=";", row.names = FALSE)
     ggsave(paste0(plotsfile, "_precip.png"),  ggplot(days_of_rain, aes(x=date_num, y=rain, group=1)) + geom_line() + facet_grid(yr ~ .) +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Daily Rainfall"))
     ggsave(paste0(plotsfile, "_wind.png"),  ggplot(days_of_rain, aes(x=date_num, y=avg_wind_speed, group=1)) + geom_line() + facet_grid(yr ~ .)  +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Wind"))
     
