@@ -10,7 +10,7 @@
 #' historicalWeatherForEvent(safeway)
 
 
-historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
+historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearRange, weeks){
     # for a given location from an event, get weather for previous 5 years on those dates
     
     
@@ -23,8 +23,7 @@ historicalWeatherForEvent <- function(event, locString=NA, midDate = NA){
     summaryfilename <- ""
 
         # for up to 5 years back, whats the weather like here?
-    all.weathers <- lapply(0:5, function(years){
-        weeks <- 2
+    all.weathers <- lapply(0:yearRange, function(years){
         if(!is.na(midDate)){
             firstDate <- as.Date(midDate) - 7 * weeks
             lastDate <-  as.Date(midDate) + 7 * weeks
