@@ -21,7 +21,6 @@ getPGAEvents <- function(startYear=0, endYear=10000, course = NA, tournament = N
     #          call. = FALSE)
     # }
     courses.directory <- "./data/event_course_date/"
-
     
     allFiles <- list.files(courses.directory)
     if(length(allFiles) ==  0 ){
@@ -30,6 +29,7 @@ getPGAEvents <- function(startYear=0, endYear=10000, course = NA, tournament = N
         allFiles <-  list.files(courses.directory)
         print(length(allFiles))
     }
+    
     datatables <- list()
     for(f in seq_along(allFiles)){
         file <- allFiles[f]
@@ -46,7 +46,7 @@ getPGAEvents <- function(startYear=0, endYear=10000, course = NA, tournament = N
             
             year <- as.integer(yearStr)
             if(year >= startYear & year <= endYear){
-                newdf <- read.table(paste0(courses.directory,file), sep=";", header=TRUE, stringsAsFactors = FALSE, na.strings=c("","NA"), quote="")
+                newdf <- read.delim(paste0(courses.directory,file), sep=";", header=TRUE, stringsAsFactors = FALSE, na.strings=c("","NA"), quote="")
                 
                 newdf <- newdf[,colSums(is.na(newdf))<nrow(newdf)]
                 completeCases <- apply(newdf, 1, function(x) all(is.na(x)))
