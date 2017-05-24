@@ -4,7 +4,8 @@
 \alias{historicalWeatherForEvent}
 \title{Get historical weather info for tournament}
 \usage{
-historicalWeatherForEvent(event, locString = NA, midDate = NA)
+historicalWeatherForEvent(event, locString = NA, midDate = NA, yearRange,
+  weeks)
 }
 \arguments{
 \item{event}{event from pga}

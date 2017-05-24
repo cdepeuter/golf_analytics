@@ -82,9 +82,10 @@ getProvizFileForCourse <- function(course){
         fileName <- "../../data/proviz/exceptions.txt"
         candidateFiles <- "../../data/proviz/"
     }
+    
     #exceptions
     exceptions <-  read.table(fileName, sep=",", stringsAsFactors = FALSE, row.names = 1 )
-    
+
     thisException <- exceptions[course, "V2"]
     if(!is.na(thisException)){
         return(trimws(thisException))
@@ -221,6 +222,15 @@ getCornersOfCourse <- function(points){
     ))
 }
 
+#' do all proviz scraping
+#'
+#' this function scrapes all proviz courses
+#' @param string input name of course
+#' @return string of file in /data/proviz directory for the corresponding file name.
+#' @export
+#' @examples 
+#' @import RecordLinkage
+#' @import rvest
 
 main_scrapeProviz <- function(){
     
@@ -254,4 +264,9 @@ main_scrapeProviz <- function(){
     })
 }
 
+
+do_proviz_pga_scrape <- function(){
+    pv_df <- main_scrape_proviz()
+    write.table(pv_df, "./data/pga-hole-coords.csv", row.names=FALSE, sep=",")
+}
 
