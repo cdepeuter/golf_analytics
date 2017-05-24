@@ -15,7 +15,7 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
     
     
     if(!exists("numWeatherRequests")){
-        numWeatherRequests <<- 1
+        numWeatherRequests <<- 2
         lastWeatherRequest <<- Sys.time()
     }
     filename <- "./data/historical_weather_"
