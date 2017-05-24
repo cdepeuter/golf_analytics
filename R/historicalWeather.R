@@ -42,15 +42,16 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
         
         dates <- seq.Date(firstDate, lastDate, by="day") %>% lapply(getWugDateFormat)
         if(is.na(locString)){
-            locString <- gsub(" ", "_", event[, "course.1"])
+            locString <- paste(event[, c("hole_lat", "hole_lon")], collapse = ",")
+            courseString <- gsub(" ", "_", event[, "course.1"])
         }
 
         if(plotsfile == "./plots/"){
             # update file names on first run
-            summaryfilename <<- paste0(filename, "summary_", as.character(firstDate),"_", locString, ".txt")
-            filename <<- paste0(filename, as.character(firstDate),"_", locString, ".txt")
+            summaryfilename <<- paste0(filename, "summary_", as.character(firstDate),"_", courseString, ".txt")
+            filename <<- paste0(filename, as.character(firstDate),"_", courseString , ".txt")
 
-            plotsfile <<- paste0(plotsfile, as.character(firstDate),"_", locString)
+            plotsfile <<- paste0(plotsfile, as.character(firstDate),"_", courseString)
             
         }
         
