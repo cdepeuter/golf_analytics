@@ -41,7 +41,8 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
         
         
        if(lastDate >= Sys.Date() - 1){
-           lastDate <- Sys.Date() - 1
+           print("last date to pull is past current date, use previous year")
+           stop()
        }
         
         dates <- seq.Date(firstDate, lastDate, by="day") %>% lapply(getWugDateFormat)
