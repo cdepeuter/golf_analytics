@@ -38,7 +38,11 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
             firstDate <- firstDate - years * 365
             lastDate <- lastDate - years * 365
         }
-       
+        
+        
+       if(lastDate >= Sys.Date() - 1){
+           lastDate <- Sys.Date() - 1
+       }
         
         dates <- seq.Date(firstDate, lastDate, by="day") %>% lapply(getWugDateFormat)
         if(is.na(locString)){
