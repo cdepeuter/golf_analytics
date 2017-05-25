@@ -21,7 +21,9 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
     filename <- "./data/historical_weather_"
     plotsfile <- "./plots/"
     summaryfilename <- ""
-
+    totalReqs <- 0
+    
+    
         # for up to 5 years back, whats the weather like here?
     all.weathers <- lapply(0:yearRange, function(years){
         if(!is.na(midDate)){
@@ -59,9 +61,10 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
             plotsfile <<- paste0(plotsfile, as.character(firstDate),"_", courseString)
             
         }
-        
+      
         reqs <- paste(locString, dates, sep="-")
         #print(reqs)
+        totalReqs <- totalReqs + length(reqs)
         thisYearWeather <- getWeatherObsLocationDates(reqs)
         
         return(thisYearWeather)
@@ -90,7 +93,7 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
     ggsave(paste0(plotsfile, "_precip.png"),  ggplot(days_of_rain, aes(x=date_num, y=rain, group=1)) + geom_line() + facet_grid(yr ~ .) +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Daily Rainfall"))
     ggsave(paste0(plotsfile, "_wind.png"),  ggplot(days_of_rain, aes(x=date_num, y=avg_wind_speed, group=1)) + geom_line() + facet_grid(yr ~ .)  +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Historical Wind"))
     
-   
+    print(paste("Total requests used this run:", totalReqs))
     #return(past.weather)
     return(0)
 }
