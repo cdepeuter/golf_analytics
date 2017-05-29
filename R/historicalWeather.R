@@ -50,7 +50,15 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
         dates <- seq.Date(firstDate, lastDate, by="day") %>% lapply(getWugDateFormat)
         if(is.na(locString)){
             locString <- paste(event[, c("hole_lat", "hole_lon")], collapse = ",")
-            courseString <- gsub(" ", "_", event[, "course.1"])
+        }
+        
+        if(!exists("courseString")){
+            if(is.na(event)){
+                courseString <- locString
+            }else{
+                courseString <- gsub(" ", "_", event[, "course.1"])
+            }
+            
         }
 
         if(plotsfile == "./plots/"){

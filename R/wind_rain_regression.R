@@ -69,7 +69,7 @@ driveDistDeviation <- function(shots, use_just_long_holes){
     rownames(avg_by_player) <- avg_by_player$player
     
     avg_dist_vector <- avg_by_player[as.character(shots$player), "avg_dist"]
-    
+    print(length(avg_dist_vector))
     return(shots$shot_dis_yards - avg_dist_vector)
 }
 

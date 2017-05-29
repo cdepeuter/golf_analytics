@@ -9,8 +9,8 @@
 #                         rain_12_to_18_hrs_before + rain_18_to_24_hrs_before + rain_24_to_36_hrs_before + rain_36_to_48_hrs_before,  all.drives, k=2)
 # 
 
-
-
+library(dplyr)
+library(flexmix)
 ## do collapse of rain cols
 all.drives <- collapseRainCols(all.drives)
 classes <-  flexmix(drive_dist_diff ~ net_wind + elevation_diff + rain_0_to_4_hrs_before + rain_4_to_12_hrs_before +rain_12_to_24_hrs_before +
@@ -44,14 +44,27 @@ club_choice_by_player[club_choice_by_player$player == 21528,]
 club_choice_by_player[club_choice_by_player$player == 10423,]
 
 
-
+## get summary statistics, which holes, courses, rounds, have different percentages of driver vs 3 woods
 ## interesting players
 
 
-# load course hole information
-course_hole_coords <- read.csv("data/pga-hole-coords.csv")
+all_holes_played <- all.drives[, c("course", "round", "hole", "par", "dis_hole_start_yards", "last_wind_speed", 
+                                   "wind_target_angle_diff", "dist_from_weather_miles","elevation_diff",
+                                   "agg_48_hr_rain", "club_class", "club_prob")]
+
+hole_summaries <- all_holes_played %>% group_by(course, round, hole) %>% 
+                                        summarise(obs=n(), dist=dis_hole_start_yards[1], avg_windspeed=mean(last_wind_speed), 
+                                                    wind_target_angle_diff_avg=yamartino(wind_target_angle_diff),
+                                                    wind_target_angle_diff_std=yamartino_std(wind_target_angle_diff), 
+                                                    pct_driver=mean(club_class==2), elevation_d=mean(elevation_diff), 
+                                                    avg_rain=mean(agg_48_hr_rain))
 
 
+hole_summaries <- data.frame(hole_summaries)[with(hole_summaries, order(course, hole, round)), ]
+
+
+# just long holes, is there a higher pct of driver?
+hole_summaries[hole_summaries$dist > long_hole_length,]
 # 
 # 
 # regData <- all.drives[,c("drive_dist_diff", "elevation_diff", "net_wind", "rain_0_to_1_hrs_before")]
