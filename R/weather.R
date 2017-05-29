@@ -381,7 +381,7 @@ getStationLocation <- function(station_code){
     wugKey <- "61b573b303c14284"
     station_lookup_url <- paste0("http://api.wunderground.com/api/", wugKey,"/geolookup/q/",station_code,".json")
     station_resp <- getUrlResponse(station_lookup_url)
-    
+    numWeatherRequests <<- numWeatherRequests + 1
     station_json <- jsonlite::fromJSON(station_resp)
     candidate_stations <- station_json$location$nearby_weather_station$airport$station
     station_coords <- candidate_stations[which(candidate_stations$icao == station_code)[1], c("lon", "lat")]

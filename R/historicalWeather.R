@@ -71,8 +71,7 @@ historicalWeatherForEvent <- function(event, locString = NA, midDate = NA, yearR
         }
       
         reqs <- paste(locString, dates, sep="-")
-        #print(reqs)
-        totalReqs <- totalReqs + length(reqs)
+        totalReqs <<- totalReqs + length(reqs)
         thisYearWeather <- getWeatherObsLocationDates(reqs)
         
         return(thisYearWeather)
