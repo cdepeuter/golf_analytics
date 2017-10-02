@@ -1,0 +1,30 @@
+Instructions to get weather files to match with shot-ext files:
+
+Before first run:
+From command line run: "Rscript package_installation.R", insure all packages were installed correctly
+
+Necessary files:
+Shotlink: in the ./data/shotlink/ directory, the shotlink files for individual tournaments to add need to be there with the filename "shot-ext-tournament-[season]-[course].txt"
+
+
+Event-course-season:
+the full up to date season file needs to be in the ./data/event_course_date/ directory. If a tournament is not in this file it won't be added to the season shotlink file
+
+With these files in the right directory, run "Rscript main_run_weather.R [season]"
+
+
+Instructions to get weather reports
+
+Before first run:
+"install.packages("flexmix")" from within rstudio
+create "plots" folder in root directory
+
+"Rscript main_course_weather_report.R  2017 746 <years> <weeks>"
+
+For no previous tournament, to input just date:
+
+"Rscript main_course_weather_report.R 0 0 <years> <weeks> 32.396224139622,-90.094115709412 2016-10-27"
+
+Either of these commands should save 2 plots in /plots/ and the data created to make those plots in /data/historical_weather_[date]_[loc].txt
+
+

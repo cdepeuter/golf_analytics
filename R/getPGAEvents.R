@@ -34,7 +34,6 @@ getPGAEvents <- function(startYear=0, endYear=10000, course = NA, tournament = N
     for(f in seq_along(allFiles)){
         file <- allFiles[f]
         # only check for txt files
-        
         tgp <- grep(".txt", file)
 
         if(length(tgp) > 0){

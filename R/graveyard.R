@@ -1,4 +1,4 @@
-# old scripts dont think ill need them but keeping
+# old scripts, dont think ill need them but keeping here in case they may be useful again
 googleKey <- 'AIzaSyDEjTuilt2Ys9HjKf8ZrXzAjvl3d5hhHWg'
 
 
